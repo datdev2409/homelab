@@ -9,3 +9,7 @@ has been selected. Cluster 001's first child is
 [Cloudflared](cloudflared/README.md), the connector for a remotely managed
 Cloudflare Tunnel. Its token is supplied through a separate Kubernetes Secret.
 Argo CD installation is managed by OpenTofu, not by this directory.
+
+[cert-manager](cert-manager/README.md) installs the certificate controller,
+webhook, CA injector, and CRDs on cluster 001. Issuers and workload Certificates
+are configured separately.

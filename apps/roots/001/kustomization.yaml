@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - cloudflared.yaml
+  - cert-manager.yaml

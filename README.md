@@ -45,7 +45,8 @@ its local state and variable files are archived under `.local/archives/`.
 `make plan-cluster-bootstrap CLUSTER=001` and `make apply-cluster-bootstrap
 CLUSTER=001` after Ansible and kubeconfig retrieval. The kubectl provider manages
 the root Application; private Git access credentials must be configured separately.
-The first child Application is [Cloudflared](apps/cloudflared/README.md);
+Child Applications include [Cloudflared](apps/cloudflared/README.md) and
+[cert-manager](apps/cert-manager/README.md);
 ingress and monitoring remain placeholders. See the
 [bootstrap module](infrastructure/root_modules/cluster-bootstrap/README.md).
 Ansible playbooks live only in `ansible/playbooks/` and import task files
