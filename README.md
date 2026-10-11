@@ -14,7 +14,7 @@ are recorded in [docs/adrs](docs/adrs).
 | `infrastructure/root_modules` | Reusable OpenTofu configurations |
 | `infrastructure/clusters/<id>` | Terragrunt configuration per cluster and stage |
 | `scripts/` | Ordered lifecycle orchestration |
-| `.local/clusters/<id>` | Ignored kubeconfig and local artifacts |
+| `.local/config/<id>/kubeconfig.yaml` | Ignored per-cluster kubeconfig |
 
 Cluster `001` targets Ubuntu 24.04 and kubeadm. Talos cluster `002` is reserved
 for a later implementation. Only three VMs should run at a time.
@@ -31,8 +31,8 @@ base-env (writes inventory) → Ansible → fetch kubeconfig
 
 See [bootstrap](docs/guides/bootstrap.md) and [teardown](docs/guides/teardown.md).
 `make bootstrap CLUSTER=001` and `make teardown CLUSTER=001` are the intended
-entry points. They currently stop before modifying resources: Argo CD bootstrap
-and full lifecycle orchestration have not been implemented.
+entry points. They currently stop before modifying resources: full lifecycle
+orchestration has not been implemented.
 
 ## Implementation status
 
@@ -41,8 +41,14 @@ located under `.local/states/001/base-env/terraform.tfstate`. The legacy
 root-level OpenTofu configuration has been removed after the user migrated state;
 its local state and variable files are archived under `.local/archives/`.
 
-`root_modules/cluster-bootstrap` remains a documented placeholder. Ansible task
-files remain in their original locations; the new playbooks import them.
+`root_modules/cluster-bootstrap` installs Argo CD with Helm. Run
+`make plan-cluster-bootstrap CLUSTER=001` and `make apply-cluster-bootstrap
+CLUSTER=001` after Ansible and kubeconfig retrieval. The kubectl provider manages
+the root Application; private Git access credentials must be configured separately.
+Child Applications remain placeholders. See the
+[bootstrap module](infrastructure/root_modules/cluster-bootstrap/README.md).
+Ansible playbooks live only in `ansible/playbooks/` and import task files
+from `ansible/tasks/`.
 Full bootstrap and teardown scripts remain guarded until implemented.
 
 ## Credentials

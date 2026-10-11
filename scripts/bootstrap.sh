@@ -9,13 +9,13 @@ fi
 
 cat >&2 <<'MESSAGE'
 Bootstrap scaffold: no resources have been changed.
-Before enabling this workflow, implement
-cluster-bootstrap, and configure tools, credentials, and Git repository access.
+Before enabling this workflow, implement lifecycle orchestration
+and configure tools, credentials, and Git repository access.
 Required stages:
   1. Check prerequisites and the three-running-VM limit.
   2. Apply base-env; verify the generated inventory file.
   3. Run Ansible and verify Kubernetes readiness.
-  4. Fetch kubeconfig into .local/clusters/001/kubeconfig.
+  4. Fetch kubeconfig into .local/config/001/kubeconfig.yaml.
   5. Apply cluster-bootstrap; verify Argo CD and GitOps synchronization.
 See docs/guides/bootstrap.md.
 MESSAGE

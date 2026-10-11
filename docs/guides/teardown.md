@@ -16,3 +16,11 @@ The implemented workflow must:
 Proxmox and HDD preparation are host prerequisites and are not destroyed with
 the cluster. If VMs are lost before bootstrap cleanup, document state recovery
 rather than blindly forgetting resources or recreating them from a second state.
+
+The bootstrap module owns each entry in `applications` through `kubectl_manifest`
+and removes these before the Argo CD Helm release. Cluster 001 currently lists
+`root-001`. Bootstrap Applications have no cascading-deletion
+finalizer, so child Applications and their workloads remain unless explicitly
+cleaned up. The chart retains CRDs and the Helm-created namespace may remain;
+both disappear when the disposable VMs are destroyed. See the
+[module guide](../../infrastructure/root_modules/cluster-bootstrap/README.md).

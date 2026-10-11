@@ -3,7 +3,8 @@
 ## Current status
 
 The repository structure and configurable `base-env` module are implemented.
-Argo CD bootstrap and full lifecycle automation remain pending. `make bootstrap
+Argo CD Helm installation and the kubectl-managed root Application are implemented;
+full lifecycle automation remains pending. `make bootstrap
 CLUSTER=001` deliberately exits with an explanation before changing resources.
 
 ## Prerequisites
@@ -25,14 +26,33 @@ Make provisioning targets select the correct cluster environment automatically.
 2. Verify OpenTofu created `ansible/inventory/001/inventory.yml` during apply.
 3. Run `ansible/playbooks/site.yml`, explicitly loading inventory, shared vars,
    cluster vars, and SSH credentials. Verify all expected nodes, CoreDNS, and CNI.
-4. Run `ansible/playbooks/get-kubeconfig.yml` with `local_kube_dir` set to the
-   absolute `.local/clusters/001` directory and `local_kubeconfig` set to its
-   `kubeconfig` file. Restrict credentials and generated files to private access.
+4. Run `ansible/playbooks/get-kubeconfig.yml`. The selected inventory directory
+   determines the cluster ID and repository root; the default destination is
+   `.local/config/<cluster-id>/kubeconfig.yaml`. The playbook sets directory mode
+   0700 and file mode 0600.
 5. Verify API access; apply `infrastructure/clusters/001/cluster-bootstrap`.
 6. Verify Argo CD readiness, Git repository access, and child synchronization.
 
 Do not use a VM-only Terragrunt dependency as proof that Kubernetes exists.
-Exact commands will be documented with the implemented modules and pinned tools.
+For the implemented Argo CD installation, verify the kubeconfig and cluster
+readiness, then run `make plan-cluster-bootstrap CLUSTER=001` and
+`make apply-cluster-bootstrap CLUSTER=001`. See the
+[bootstrap module guide](../../infrastructure/root_modules/cluster-bootstrap/README.md)
+for pinned versions, configuration, UI access, and teardown. Inspect `root-001`
+sync status and conditions after apply. Push the GitOps source and configure
+private Git credentials separately if needed; the current root has no children.
+
+From `ansible/`, retrieve the kubeconfig for cluster 001 with:
+
+```sh
+ansible-playbook -i inventory/001/inventory.yml playbooks/get-kubeconfig.yml
+```
+
+For another kubeadm cluster, select its `inventory/<id>/inventory.yml`; the same
+playbook writes `.local/config/<id>/kubeconfig.yaml` automatically. You can also
+pass `-e cluster_id=002` to explicitly set the destination ID. Always select the
+matching inventory to fetch from the correct cluster. Cluster 002's planned
+Talos provisioning and kubeconfig retrieval remain unimplemented.
 
 ## Existing cluster 001
 

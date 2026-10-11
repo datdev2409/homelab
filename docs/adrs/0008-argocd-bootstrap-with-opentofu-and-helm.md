@@ -88,6 +88,35 @@ and cascading-deletion behavior must be specified in the implementation.
 - This ADR records architecture only; it does not install Argo CD or change
   the running cluster.
 
+## Implementation notes
+
+The reusable `infrastructure/root_modules/cluster-bootstrap` now installs Argo CD
+using Helm provider 3.3.0. Cluster 001 pins chart 10.10.2 and passes its ignored
+kubeconfig explicitly. Helm waits for readiness and hook jobs, with atomic
+rollback on failure. The module's `argocd/values.yaml` defaults to non-HA operation and
+ClusterIP UI access through port-forwarding; CRDs are retained on uninstall.
+Clusters can override individual nested values through the `argocd_values`
+input. Helm layers module defaults, optional values files, then input overrides.
+
+Repository layout and the `apps/roots/<id>` GitOps entry point follow ADR 0009.
+Use `kubectl_manifest` from `alekc/kubectl` 2.4.1 to apply bootstrap Applications
+from encoded YAML. Configure an `applications` list containing `application_name`,
+`repo_url`, `ref`, and `path`, with optional `project`, `prune`, and `self_heal`.
+Names must be unique; resources use `for_each` keyed by name so list reordering
+preserves their identities. Empty lists install Argo CD alone. Both providers
+use the same explicit kubeconfig and optional context. Every manifest depends
+on the ready Helm release, disables schema
+validation for the new CRD, and uses provider apply retries for discovery delays.
+The user reported successful Argo CD bootstrap on cluster 001 on 2026-10-11;
+Git synchronization and teardown still require separate verification.
+
+Cluster 001 tracks `main` at `apps/roots/001` with automated prune and self-heal,
+protecting against empty-source pruning. OpenTofu owns the root Application;
+Argo CD owns explicitly listed children. The root has no cascading-deletion
+finalizer, so teardown must clean up children/workloads separately before Helm
+uninstall. Git credentials for private repositories remain separate local
+configuration. Operational instructions are in the [module guide](../../infrastructure/root_modules/cluster-bootstrap/README.md).
+
 ## References
 
 - [Argo CD Helm installation](https://argo-cd.readthedocs.io/en/stable/operator-manual/installation/#helm)

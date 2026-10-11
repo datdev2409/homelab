@@ -56,7 +56,7 @@ inputs, GitOps configuration, and generated local artifacts:
 │   ├── bootstrap.sh
 │   └── teardown.sh
 └── .local/
-    ├── clusters/001/kubeconfig
+    ├── config/001/kubeconfig.yaml
     └── states/001/
         ├── base-env/terraform.tfstate
         └── cluster-bootstrap/terraform.tfstate
