@@ -1,0 +1,50 @@
+---
+- name: Install prerequisites
+  ansible.builtin.apt:
+    name: [ca-certificates, curl, gpg, python3-apt]
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    lock_timeout: 300
+
+- name: Read active swap
+  ansible.builtin.command: swapon --show --noheadings
+  register: active_swap
+  changed_when: false
+
+- name: Disable active swap
+  ansible.builtin.command: swapoff -a
+  when: active_swap.stdout | trim | length > 0
+
+- name: Disable swap entries in fstab with a backup
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^(\s*[^#\s]\S*\s+\S+\s+swap\s+.*)$'
+    replace: '# Disabled for Kubernetes: \1'
+    backup: true
+
+- name: Persist required kernel modules
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/kubernetes.conf
+    mode: '0644'
+    content: |
+      overlay
+      br_netfilter
+
+- name: Load kernel modules
+  ansible.builtin.command: "modprobe {{ item }}"
+  loop: [overlay, br_netfilter]
+  changed_when: false
+
+- name: Persist Kubernetes network sysctls
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-kubernetes.conf
+    mode: '0644'
+    content: |
+      net.ipv4.ip_forward = 1
+      net.bridge.bridge-nf-call-iptables = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+
+- name: Apply sysctls
+  ansible.builtin.command: sysctl -p /etc/sysctl.d/99-kubernetes.conf
+  changed_when: false

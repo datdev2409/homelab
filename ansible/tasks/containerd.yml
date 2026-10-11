@@ -1,0 +1,58 @@
+---
+- name: Install Ubuntu containerd package
+  ansible.builtin.apt:
+    name: containerd
+    state: present
+    lock_timeout: 300
+
+- name: Create containerd configuration directory
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+
+- name: Check bootstrap marker
+  ansible.builtin.stat:
+    path: /etc/containerd/.kubeadm-ansible-configured
+  register: runtime_marker
+
+- name: Check for existing Kubernetes membership
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: existing_membership
+
+- name: Avoid replacing runtime configuration on an unmanaged existing cluster
+  ansible.builtin.assert:
+    that:
+      - runtime_marker.stat.exists or not existing_membership.stat.exists
+    fail_msg: "Existing Kubernetes node detected. This bootstrap project must not overwrite its runtime configuration."
+
+- name: Generate default containerd configuration on first run
+  ansible.builtin.command: containerd config default
+  register: runtime_default
+  changed_when: false
+  when: not runtime_marker.stat.exists
+
+- name: Write default configuration with systemd cgroups and CRI enabled
+  ansible.builtin.copy:
+    dest: /etc/containerd/config.toml
+    mode: '0644'
+    backup: true
+    content: "{{ runtime_default.stdout | regex_replace('SystemdCgroup = false', 'SystemdCgroup = true') }}\n"
+  when: not runtime_marker.stat.exists
+  notify: Restart containerd
+
+- name: Record configuration ownership
+  ansible.builtin.copy:
+    dest: /etc/containerd/.kubeadm-ansible-configured
+    content: "Managed by kubeadm-ansible bootstrap\n"
+    mode: '0600'
+
+- name: Start containerd at boot
+  ansible.builtin.systemd_service:
+    name: containerd
+    enabled: true
+    state: started
+
+- name: Apply pending runtime restart before kubeadm
+  ansible.builtin.meta: flush_handlers

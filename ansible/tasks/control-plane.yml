@@ -1,0 +1,65 @@
+---
+- name: Check control-plane bootstrap state
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: admin_config
+
+- name: Write kubeadm bootstrap configuration
+  ansible.builtin.template:
+    src: templates/kubeadm.yml.j2
+    dest: /root/kubeadm-bootstrap.yml
+    mode: '0600'
+  when: not admin_config.stat.exists
+
+- name: Initialize control plane once
+  ansible.builtin.command:
+    cmd: kubeadm init --config=/root/kubeadm-bootstrap.yml
+    creates: /etc/kubernetes/admin.conf
+  # kubeadm output includes a bootstrap token.
+  no_log: true
+
+- name: Wait for API server readiness
+  ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf get --raw=/readyz
+  register: api_ready
+  changed_when: false
+  retries: 30
+  delay: 10
+  until: api_ready.rc == 0
+
+- name: Find administrator home directory
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ cluster_admin_user }}"
+
+- name: Create administrator kubeconfig directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['getent_passwd'][cluster_admin_user][4] }}/.kube"
+    state: directory
+    owner: "{{ cluster_admin_user }}"
+    mode: '0700'
+
+- name: Install administrator kubeconfig locally on control plane
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    remote_src: true
+    dest: "{{ ansible_facts['getent_passwd'][cluster_admin_user][4] }}/.kube/config"
+    owner: "{{ cluster_admin_user }}"
+    mode: '0600'
+  no_log: true
+
+- name: Use the bundled Flannel network defaults
+  ansible.builtin.assert:
+    that: pod_cidr == '10.244.0.0/16'
+    fail_msg: "Changing the Pod CIDR requires updating the Flannel manifest too."
+
+- name: Download pinned Flannel release manifest
+  ansible.builtin.get_url:
+    url: "https://github.com/flannel-io/flannel/releases/download/{{ flannel_version }}/kube-flannel.yml"
+    dest: "/root/kube-flannel-{{ flannel_version }}.yml"
+    mode: '0600'
+
+- name: Apply Flannel manifest
+  ansible.builtin.command:
+    cmd: "kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /root/kube-flannel-{{ flannel_version }}.yml"
+  register: flannel_apply
+  changed_when: "' created' in flannel_apply.stdout or ' configured' in flannel_apply.stdout"

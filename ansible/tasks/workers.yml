@@ -1,0 +1,25 @@
+---
+- name: Check whether worker has already joined
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: worker_kubeconfig
+
+- name: Check worker can reach Kubernetes API
+  ansible.builtin.wait_for:
+    host: "{{ hostvars[groups['control_plane'][0]].ansible_host }}"
+    port: 6443
+    timeout: 60
+
+- name: Create short-lived join command for unjoined worker
+  ansible.builtin.command: kubeadm token create --ttl 30m --print-join-command
+  delegate_to: "{{ groups['control_plane'][0] }}"
+  register: join_command
+  when: not worker_kubeconfig.stat.exists
+  no_log: true
+
+- name: Join worker once
+  ansible.builtin.command:
+    cmd: "{{ join_command.stdout }} --cri-socket={{ cri_socket }} --node-name={{ inventory_hostname }}"
+    creates: /etc/kubernetes/kubelet.conf
+  when: not worker_kubeconfig.stat.exists
+  no_log: true

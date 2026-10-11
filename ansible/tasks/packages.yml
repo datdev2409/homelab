@@ -1,0 +1,105 @@
+---
+- name: Create APT keyring directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Kubernetes signing key in ASCII format
+  ansible.builtin.get_url:
+    url: "https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_minor }}/deb/Release.key"
+    dest: /etc/apt/keyrings/kubernetes.asc
+    mode: '0644'
+
+- name: Configure Kubernetes package repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/kubernetes.list
+    mode: '0644'
+    content: "deb [signed-by=/etc/apt/keyrings/kubernetes.asc] https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_minor }}/deb/ /\n"
+  register: kube_repo
+
+- name: Refresh package metadata
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: "{{ 0 if kube_repo.changed else 3600 }}"
+    lock_timeout: 300
+
+- name: Read installed package versions
+  ansible.builtin.package_facts:
+    manager: apt
+
+- name: Read available kubeadm versions on control plane
+  ansible.builtin.command: apt-cache madison kubeadm
+  when: inventory_hostname in groups['control_plane']
+  register: kubeadm_candidates
+  changed_when: false
+
+- name: Select one version for the whole cluster
+  ansible.builtin.set_fact:
+    resolved_kubernetes_package: >-
+      {{ kubernetes_package_version if kubernetes_package_version | length > 0
+         else (ansible_facts['packages']['kubeadm'][0]['version']
+               if 'kubeadm' in ansible_facts['packages']
+               else kubeadm_candidates.stdout_lines[0].split('|')[1] | trim) }}
+  when: inventory_hostname in groups['control_plane']
+
+- name: Use control-plane package version
+  ansible.builtin.set_fact:
+    selected_kubernetes_package: "{{ hostvars[groups['control_plane'][0]].resolved_kubernetes_package }}"
+
+- name: Require selected version to match the configured minor
+  ansible.builtin.assert:
+    that:
+      - selected_kubernetes_package.startswith(kubernetes_minor + '.')
+
+- name: Refuse implicit upgrades or downgrades
+  ansible.builtin.assert:
+    that:
+      - item not in ansible_facts['packages'] or ansible_facts['packages'][item][0]['version'] == selected_kubernetes_package
+    fail_msg: "Installed {{ item }} differs from the selected version. Use a separate kubeadm upgrade procedure."
+  loop: [kubeadm, kubelet, kubectl]
+
+- name: Install matching Kubernetes packages and CNI binaries
+  ansible.builtin.apt:
+    name:
+      - "kubeadm={{ selected_kubernetes_package }}"
+      - "kubelet={{ selected_kubernetes_package }}"
+      - "kubectl={{ selected_kubernetes_package }}"
+      - kubernetes-cni
+    state: present
+    lock_timeout: 300
+
+- name: Hold Kubernetes package versions
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop: [kubeadm, kubelet, kubectl]
+
+- name: Use the inventory LAN address for kubelet
+  ansible.builtin.copy:
+    dest: /etc/default/kubelet
+    mode: '0644'
+    content: 'KUBELET_EXTRA_ARGS="--node-ip={{ ansible_host }}"'
+
+- name: Enable kubelet
+  ansible.builtin.systemd_service:
+    name: kubelet
+    enabled: true
+
+- name: Verify required CNI plugins
+  ansible.builtin.stat:
+    path: "/opt/cni/bin/{{ item }}"
+  loop: [bridge, host-local, loopback, portmap]
+  register: cni_plugins
+
+- name: Require the CNI plugin executables
+  ansible.builtin.assert:
+    that: item.stat.exists and item.stat.executable
+  loop: "{{ cni_plugins.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Print version to pin for future rebuilds
+  ansible.builtin.debug:
+    msg: "Set kubernetes_package_version: '{{ selected_kubernetes_package }}' in group_vars/all.yml for exact rebuilds."
+  run_once: true

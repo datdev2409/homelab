@@ -1,0 +1,11 @@
+---
+# First install selects the newest patch in this minor repository. Reruns reuse
+# the control plane's installed kubeadm version. Set an exact apt version here
+# for fully repeatable rebuilds, e.g. the resolved value printed by the playbook.
+kubernetes_minor: "1.35"
+kubernetes_package_version: ""
+pod_cidr: "10.244.0.0/16"
+service_cidr: "10.96.0.0/12"
+flannel_version: "v0.28.9"
+cri_socket: "unix:///run/containerd/containerd.sock"
+cluster_admin_user: ubuntu

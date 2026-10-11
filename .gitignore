@@ -1,0 +1,37 @@
+# Local credentials, inventory, kubeconfig, and state
+.local/
+.direnv/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa
+id_ed25519
+kubeconfig
+kubeconfig.*
+!*.example
+ansible/inventory.yml
+
+# OpenTofu and Terragrunt generated data and secrets
+**/.terraform/
+**/.terragrunt-cache/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.plan
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+!*.tfvars.json.example
+*.secret.yml
+*.secret.yaml
+secrets.yml
+secrets.yaml
+crash.log
+crash.*.log
+
+# Provider lockfiles are intentionally committed
+.DS_Store
+__pycache__/
+*.retry

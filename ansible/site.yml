@@ -1,0 +1,123 @@
+---
+- name: Prepare all three Ubuntu VMs
+  hosts: all
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Require exactly one control plane and two workers
+      ansible.builtin.assert:
+        that:
+          - groups.get('control_plane', []) | length == 1
+          - groups.get('workers', []) | length == 2
+          - groups['all'] | length == 3
+          - groups['control_plane'] | intersect(groups['workers']) | length == 0
+        fail_msg: "Use inventory groups control_plane (one host) and workers (two hosts)."
+      run_once: true
+
+    - name: Wait for SSH and Python
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Wait for cloud-init to finish
+      ansible.builtin.command: cloud-init status --wait
+      changed_when: false
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+    - name: Require supported guest OS and a numeric stable node address
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] == 'Ubuntu'
+          - ansible_facts['distribution_version'] == '24.04'
+          - ansible_facts['architecture'] == 'x86_64'
+          - ansible_host is match('^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+          - ansible_host in ansible_facts['all_ipv4_addresses']
+        fail_msg: "This project targets Ubuntu 24.04 amd64; ansible_host must be the VM's stable LAN IPv4 address."
+
+    - name: Check cluster CIDRs do not contain the node address
+      ansible.builtin.command:
+        argv:
+          - python3
+          - -c
+          - "import ipaddress,sys; ip=ipaddress.ip_address(sys.argv[1]); pod=ipaddress.ip_network(sys.argv[2]); svc=ipaddress.ip_network(sys.argv[3]); sys.exit(0 if ip not in pod and ip not in svc and not pod.overlaps(svc) else 1)"
+          - "{{ ansible_host }}"
+          - "{{ pod_cidr }}"
+          - "{{ service_cidr }}"
+      changed_when: false
+
+    - name: Require Flannel's default network before making changes
+      ansible.builtin.assert:
+        that: pod_cidr == '10.244.0.0/16'
+        fail_msg: "This project uses Flannel's default manifest. Customize that manifest before changing pod_cidr."
+
+  tasks:
+    - name: Prepare Linux
+      ansible.builtin.import_tasks: tasks/prepare.yml
+    - name: Configure containerd
+      ansible.builtin.import_tasks: tasks/containerd.yml
+    - name: Install Kubernetes tools
+      ansible.builtin.import_tasks: tasks/packages.yml
+
+  handlers:
+    - name: Restart containerd
+      ansible.builtin.systemd_service:
+        name: containerd
+        state: restarted
+
+- name: Initialize the control plane and install networking
+  hosts: control_plane
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Bootstrap control plane
+      ansible.builtin.import_tasks: tasks/control-plane.yml
+
+- name: Join workers
+  hosts: workers
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Join workers that have not been joined
+      ansible.builtin.import_tasks: tasks/workers.yml
+
+- name: Verify cluster
+  hosts: control_plane
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Wait for each expected node to become Ready
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - --kubeconfig=/etc/kubernetes/admin.conf
+          - wait
+          - --for=condition=Ready
+          - "node/{{ item }}"
+          - --timeout=300s
+      loop: "{{ groups['control_plane'] + groups['workers'] }}"
+      changed_when: false
+      register: node_ready
+      retries: 5
+      delay: 5
+      until: node_ready.rc == 0
+
+    - name: Wait for CoreDNS
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf -n kube-system rollout status deployment/coredns --timeout=300s
+      changed_when: false
+
+    - name: Wait for Flannel
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf -n kube-flannel rollout status daemonset/kube-flannel-ds --timeout=300s
+      changed_when: false
+
+    - name: Read node status
+      ansible.builtin.command: kubectl --kubeconfig=/etc/kubernetes/admin.conf get nodes -o wide
+      register: cluster_nodes
+      changed_when: false
+
+    - name: Show node status
+      ansible.builtin.debug:
+        var: cluster_nodes.stdout_lines
