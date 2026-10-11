@@ -3,7 +3,19 @@ locals {
   cluster_id              = "001"
   guest_os                = "ubuntu-24.04"
   kubernetes_distribution = "kubeadm"
-  gitops_path             = "apps/roots/001"
+  cluster_bootstrap = {
+    argocd_chart_version = "10.10.2"
+    argocd_namespace     = "argocd"
+    argocd_release_name  = "argocd"
+    applications = [
+      {
+        application_name = "root-001"
+        repo_url         = "https://github.com/datdev2409/homelab.git"
+        ref              = "main"
+        path             = "apps/roots/001"
+      }
+    ]
+  }
   base_env = {
     virtual_environment_endpoint = "https://192.168.1.200:8006"
     # Preserve current host's self-signed TLS behavior explicitly.
