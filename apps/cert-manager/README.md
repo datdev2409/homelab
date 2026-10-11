@@ -10,6 +10,11 @@ last. The root Kustomization explicitly includes
 `apps/roots/001/cert-manager.yaml`. OpenTofu continues to own Argo CD and the
 root Application; Argo CD owns cert-manager and its CRDs.
 
+A third Git source deploys Kubernetes manifests from `extra/`, recursively.
+Add ClusterIssuer manifests there; see the [extra resources guide](extra/README.md)
+for sync ordering and credential references. The `ref: values` source remains
+dedicated to Helm values.
+
 CRDs are enabled in the chart. Server-side apply avoids the client-side apply
 annotation size limit on large CRDs. The controller, webhook, and CA injector
 each run one replica, requesting 125m CPU and 320 MiB memory in total. The
@@ -37,10 +42,11 @@ kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n cert-manager get deplo
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml get crd -l app.kubernetes.io/name=cert-manager
 ```
 
-Installation does not configure an Issuer, ClusterIssuer, or Certificate.
-Choose an issuer and configure its credentials separately before requesting
-workload certificates. A Cloudflared tunnel token is not a Cloudflare DNS API
-token and cannot be used for DNS-01 validation.
+`extra/cluster-issuer.yaml` defines the `letsencrypt-prod` ClusterIssuer with
+Cloudflare DNS-01. Supply the separate DNS API token Secret before requesting
+workload certificates; see the [setup instructions](extra/README.md).
+A Cloudflared tunnel token is not a Cloudflare DNS API token and cannot be used
+for DNS-01 validation. Workload Certificates are configured separately.
 
 ## Teardown
 
