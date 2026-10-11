@@ -140,17 +140,17 @@ existing unmanaged files with the same filename.
 
 OpenTofu writes YAML inventory automatically during apply, after VM provisioning,
 using `local_file.ansible_inventory`. Terragrunt passes the absolute path:
-`.local/config/clusters/<id>/inventory.yml`. Direct module callers must provide
+`ansible/inventory/<id>/inventory.yml`. Direct module callers must provide
 `inventory_path` explicitly. New parent directories use 0700 permissions and
-the inventory file uses 0600. The file is ignored by Git and removed by destroy.
+the inventory file uses 0600. The file contains no credentials, may be committed to Git, and is removed by destroy.
 
 No manual output export is required. The inventory output remains available for
-other consumers. Existing Ansible configuration still defaults to the old file;
-pass the new inventory explicitly:
+other consumers. Ansible defaults to cluster 001 when run from `ansible/`; select a cluster
+explicitly when needed:
 
 ```sh
 cd ansible
-ansible-playbook -i ../.local/config/clusters/001/inventory.yml playbooks/site.yml
+ansible-playbook -i inventory/001/inventory.yml playbooks/site.yml
 ```
 
 This command uses the existing `ansible.cfg` and shared group variables; load any

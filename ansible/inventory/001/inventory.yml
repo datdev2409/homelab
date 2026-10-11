@@ -1,0 +1,19 @@
+"all":
+  "children":
+    "control_plane":
+      "hosts":
+        "cp-01": {}
+    "workers":
+      "hosts":
+        "worker-01": {}
+        "worker-02": {}
+  "hosts":
+    "cp-01":
+      "ansible_host": "192.168.1.201"
+    "worker-01":
+      "ansible_host": "192.168.1.202"
+    "worker-02":
+      "ansible_host": "192.168.1.203"
+  "vars":
+    "ansible_python_interpreter": "/usr/bin/python3"
+    "ansible_user": "ubuntu"

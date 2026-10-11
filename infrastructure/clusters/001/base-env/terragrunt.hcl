@@ -13,7 +13,7 @@ terraform {
 
 inputs = merge(local.cluster.locals.base_env, include.root.locals.proxmox_credentials, {
   ssh_public_key = get_env("HOMELAB_SSH_PUBLIC_KEY", "")
-  inventory_path = "${include.root.locals.repository_root}/.local/config/clusters/${local.cluster.locals.cluster_id}/inventory.yml"
+  inventory_path = "${include.root.locals.repository_root}/ansible/inventory/${local.cluster.locals.cluster_id}/inventory.yml"
 })
 
 generate "import" {

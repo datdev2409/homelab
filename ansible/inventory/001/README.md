@@ -1,8 +1,11 @@
 # Cluster 001 variables
 
-Commit only non-secret cluster-specific variables here. Existing shared
+Commit only non-secret inventory and cluster-specific variables here. Existing shared
 configuration remains in `ansible/group_vars/all.yml` during migration.
 
-Generated hosts belong in `.local/clusters/001/inventory.yml`. The new workflow
-must load this inventory together with shared and cluster-specific variables
-explicitly, rather than relying on inventory-relative discovery.
+OpenTofu writes generated hosts to `inventory.yml` in this directory. This file
+contains host addresses and SSH usernames, not credentials, and may be committed.
+Keep credentials and SSH private keys in `.local/credentials/`.
+
+Run Ansible from `ansible/`; its default inventory selects this cluster. Pass
+`-i inventory/<cluster-id>/inventory.yml` explicitly when selecting another cluster.

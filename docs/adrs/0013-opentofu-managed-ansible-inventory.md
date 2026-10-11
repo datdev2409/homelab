@@ -4,6 +4,9 @@
 - **Date:** 2026-10-11
 - **Amends:** [ADR 0009](0009-repository-structure-and-cluster-lifecycle.md) inventory generation and location
 
+The inventory location and Git exclusion are amended by
+[ADR 0014](0014-inventory-location-under-ansible.md).
+
 ## Decision
 
 Have base-env manage a `local_file.ansible_inventory` resource that writes YAML

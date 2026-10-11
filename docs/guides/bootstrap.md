@@ -22,7 +22,7 @@ Make provisioning targets select the correct cluster environment automatically.
 ## Intended stages
 
 1. Apply `infrastructure/clusters/001/base-env` for a fresh deployment.
-2. Verify OpenTofu created `.local/config/clusters/001/inventory.yml` during apply.
+2. Verify OpenTofu created `ansible/inventory/001/inventory.yml` during apply.
 3. Run `ansible/playbooks/site.yml`, explicitly loading inventory, shared vars,
    cluster vars, and SSH credentials. Verify all expected nodes, CoreDNS, and CNI.
 4. Run `ansible/playbooks/get-kubeconfig.yml` with `local_kube_dir` set to the
