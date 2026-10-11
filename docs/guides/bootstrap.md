@@ -40,7 +40,9 @@ readiness, then run `make plan-cluster-bootstrap CLUSTER=001` and
 [bootstrap module guide](../../infrastructure/root_modules/cluster-bootstrap/README.md)
 for pinned versions, configuration, UI access, and teardown. Inspect `root-001`
 sync status and conditions after apply. Push the GitOps source and configure
-private Git credentials separately if needed; the current root has no children.
+private Git credentials separately if needed. The first child is Cloudflared;
+prepare its tunnel token Secret before enabling it. See the
+[Cloudflared guide](../../apps/cloudflared/README.md).
 
 From `ansible/`, retrieve the kubeconfig for cluster 001 with:
 

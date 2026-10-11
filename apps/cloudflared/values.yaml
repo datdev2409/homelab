@@ -1,0 +1,60 @@
+# Shared non-secret defaults. Cluster overrides are loaded afterward.
+fullnameOverride: cloudflared
+
+tunnel:
+  quickTunnel:
+    enabled: false
+  existingSecret: cloudflared-token
+  existingSecretKey: token
+
+image:
+  repository: cloudflare/cloudflared
+  tag: "2026.10.0"
+
+replicaCount: 2
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+serviceAccount:
+  create: true
+
+metrics:
+  enabled: false
+
+probes:
+  startup:
+    enabled: false
+  liveness:
+    enabled: false
+  readiness:
+    enabled: true
+
+terminationGracePeriodSeconds: 60
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: null
+    memory: 256Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: cloudflared
+              app.kubernetes.io/instance: cloudflared
+          topologyKey: kubernetes.io/hostname

@@ -99,8 +99,10 @@ Cluster 001 creates `root-001` in `argocd`, reading
 `https://github.com/datdev2409/homelab.git`, revision `main`, path `apps/roots/001`.
 OpenTofu owns this root Application; keep its manifest outside the GitOps root.
 Argo CD detects the committed Kustomization and reconciles explicitly listed
-child Applications. The current Kustomization has no children, so no workloads
-are deployed until those manifests are added and pushed to Git.
+child Applications. The first child is `cloudflared`; its connector needs
+a separately supplied tunnel token Secret. See the
+[Cloudflared guide](../../../apps/cloudflared/README.md) before pushing its
+manifests and enabling reconciliation.
 
 `kubectl_manifest.applications` uses `for_each`, keyed by `application_name`.
 Names must be unique. Reordering the list preserves resource addresses; renaming
