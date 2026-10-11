@@ -20,7 +20,7 @@ Cluster `001` targets Ubuntu 24.04 and kubeadm. Talos cluster `002` is reserved
 for a later implementation. Only three VMs should run at a time.
 
 State mirrors each Terragrunt unit under `.local/states/`, for example
-`.local/states/clusters/001/base-env/terraform.tfstate`.
+`.local/states/001/base-env/terraform.tfstate`.
 
 ## Workflow
 
@@ -37,7 +37,7 @@ and full lifecycle orchestration have not been implemented.
 ## Implementation status
 
 The reusable `root_modules/base-env` is implemented and cluster 001 state is
-located under `.local/states/clusters/001/base-env/terraform.tfstate`. The legacy
+located under `.local/states/001/base-env/terraform.tfstate`. The legacy
 root-level OpenTofu configuration has been removed after the user migrated state;
 its local state and variable files are archived under `.local/archives/`.
 

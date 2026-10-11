@@ -1,6 +1,6 @@
 # Shared backend and credential loading. No secret values are committed here.
 locals {
-  repository_root = dirname(get_parent_terragrunt_dir())
+  repository_root = dirname(dirname(get_parent_terragrunt_dir()))
   unit_path       = path_relative_to_include()
   state_path      = "${local.repository_root}/.local/states/${local.unit_path}/terraform.tfstate"
 

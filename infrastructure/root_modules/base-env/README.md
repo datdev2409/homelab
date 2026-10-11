@@ -24,7 +24,7 @@ Credentials load through direnv: global `.local/credentials/.env`, followed by
 for the shell hook and local approval commands. Root environment configuration
 selects OpenTofu and loads the existing public SSH key when available.
 
-`infrastructure/root.hcl` loads the Proxmox token from `PROXMOX_VE_API_TOKEN`,
+`infrastructure/clusters/root.hcl` loads the Proxmox token from `PROXMOX_VE_API_TOKEN`,
 falling back to `TF_VAR_virtual_environment_api_token`. The base-env unit
 consumes the exposed credential map; cluster-bootstrap does not. No token is
 written into generated provider configuration. The module's token variable is
@@ -32,10 +32,10 @@ sensitive; state and rendered Terragrunt configuration still require protection.
 
 The same root configuration generates a local backend for every included unit:
 `.local/states/<unit-path>/terraform.tfstate`, mirroring the unit's path relative
-to `infrastructure/`. For example:
+to `infrastructure/clusters/`. For example:
 
-- `.local/states/clusters/001/base-env/terraform.tfstate`
-- `.local/states/clusters/001/cluster-bootstrap/terraform.tfstate`
+- `.local/states/001/base-env/terraform.tfstate`
+- `.local/states/001/cluster-bootstrap/terraform.tfstate`
 
 These are separate state files outside execution caches and excluded from Git.
 
@@ -61,8 +61,8 @@ applying; repository cleanup did not modify active state.
 With the shell hook configured and the cluster .envrc approved, run:
 
 ```sh
-mkdir -p .local/states/clusters/001/base-env
-chmod 700 .local .local/states .local/states/clusters .local/states/clusters/001 .local/states/clusters/001/base-env
+mkdir -p .local/states/001/base-env
+chmod 700 .local .local/states .local/states/001 .local/states/001/base-env
 cd infrastructure/clusters/001/base-env
 terragrunt plan
 terragrunt apply
@@ -129,6 +129,20 @@ Both sources support optional `checksum` and `checksum_algorithm` together.
 Downloads support SHA256/SHA384/SHA512; local uploads require SHA256. Pin dated
 artifacts and checksums for reproducibility. Local uploads do not overwrite
 existing unmanaged files with the same filename.
+
+## Backend path relocation
+
+Existing cluster 001 state has been moved to
+`.local/states/001/base-env/terraform.tfstate`, with a pre-move backup under
+`.local/archives/`. Reinitialize the existing unit before planning or applying:
+
+```sh
+cd infrastructure/clusters/001/base-env
+direnv exec .. terragrunt init -reconfigure
+```
+
+This refreshes cached backend configuration; do not migrate the state again.
+The shared root now lives at `infrastructure/clusters/root.hcl`.
 
 ## Outputs
 

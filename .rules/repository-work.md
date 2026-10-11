@@ -1,5 +1,7 @@
 # Working in this repository
 
+- Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+  for commit messages: `<type>[optional scope]: <description>`.
 - Read the relevant ADRs and component README before changing architecture.
   Record accepted decisions in numbered Markdown ADRs and link amendments or
   superseded decisions. Keep implementation and operational guides consistent.

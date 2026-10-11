@@ -38,7 +38,9 @@ Exact commands will be documented with the implemented modules and pinned tools.
 
 The user migrated cluster 001 state to the new Terragrunt unit. The legacy
 root-level OpenTofu configuration has been removed; its local artifacts are
-archived under `.local/archives/`. Use the new unit and its existing state for
+archived under `.local/archives/`. State is now at `.local/states/001/base-env/terraform.tfstate`. Reinitialize
+with `direnv exec .. terragrunt init -reconfigure` from the base-env unit after
+the backend path relocation. Use the new unit and its existing state for
 this cluster rather than starting a second state owner.
 
 Review a plan before applying. The migrated state may retain legacy resource
