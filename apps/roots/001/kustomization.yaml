@@ -5,3 +5,4 @@ resources:
   - cloudflared.yaml
   - cert-manager.yaml
   - traefik.yaml
+  - web-test.yaml
