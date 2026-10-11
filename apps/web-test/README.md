@@ -13,6 +13,12 @@ The Certificate uses `letsencrypt-prod` and writes `web-test-tls` in the workloa
 namespace. The Ingress references this same Secret. It has no cert-manager
 issuer annotation because the Certificate is managed explicitly.
 
+Argo CD's default Ingress health check requires a LoadBalancer address, which
+this ClusterIP tunnel setup does not assign. The Ingresses exclude that check
+from Application health using `argocd.argoproj.io/ignore-healthcheck`; Deployment
+and Certificate health remain checked. Verify actual routing using the
+requests below.
+
 ## Deployment and checks
 
 ```sh

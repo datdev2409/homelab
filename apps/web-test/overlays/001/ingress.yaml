@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: web-test
   annotations:
+    # No LoadBalancer address is assigned to this ClusterIP tunnel origin.
+    argocd.argoproj.io/ignore-healthcheck: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
   ingressClassName: traefik
@@ -27,6 +29,8 @@ kind: Ingress
 metadata:
   name: web-test-http
   annotations:
+    # Routing is verified through the tunnel and direct Traefik requests.
+    argocd.argoproj.io/ignore-healthcheck: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   ingressClassName: traefik
