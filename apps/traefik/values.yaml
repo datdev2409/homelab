@@ -1,0 +1,61 @@
+# Shared non-secret defaults. Cluster overrides are loaded afterward.
+image:
+  tag: "v3.7.14"
+
+deployment:
+  replicas: 2
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+ingressClass:
+  enabled: true
+  name: traefik
+  isDefaultClass: false
+
+providers:
+  kubernetesIngress:
+    enabled: true
+    ingressClass: traefik
+    publishedService:
+      enabled: false
+  kubernetesCRD:
+    enabled: true
+    ingressClass: traefik
+    allowCrossNamespace: false
+  kubernetesGateway:
+    enabled: false
+
+service:
+  spec:
+    type: ClusterIP
+
+api:
+  dashboard: false
+  insecure: false
+
+ingressRoute:
+  dashboard:
+    enabled: false
+
+metrics:
+  prometheus: null
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: traefik
+            app.kubernetes.io/instance: traefik-traefik
+        topologyKey: kubernetes.io/hostname

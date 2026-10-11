@@ -21,7 +21,8 @@ hostnames, DNS, and Access policies separately in the Cloudflare dashboard.
 Future OpenTofu ownership of Cloudflare resources requires a separate unit.
 
 Start with explicit hostname routes to Kubernetes ClusterIP Services. An
-ingress controller is optional and remains unselected. Use a separate tunnel
+ingress controller is optional; [ADR 0016](0016-traefik-ingress-controller.md)
+adds Traefik as an alternative tunnel origin. Use a separate tunnel
 and token per cluster; do not attach independent clusters to the same tunnel.
 
 Run two fixed replicas with preferred placement on separate worker nodes.

@@ -46,8 +46,8 @@ its local state and variable files are archived under `.local/archives/`.
 CLUSTER=001` after Ansible and kubeconfig retrieval. The kubectl provider manages
 the root Application; private Git access credentials must be configured separately.
 Child Applications include [Cloudflared](apps/cloudflared/README.md) and
-[cert-manager](apps/cert-manager/README.md);
-ingress and monitoring remain placeholders. See the
+[cert-manager](apps/cert-manager/README.md), plus
+[Traefik](apps/traefik/README.md) ingress; monitoring remains a placeholder. See the
 [bootstrap module](infrastructure/root_modules/cluster-bootstrap/README.md).
 Ansible playbooks live only in `ansible/playbooks/` and import task files
 from `ansible/tasks/`.

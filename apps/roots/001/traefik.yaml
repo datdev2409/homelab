@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+  - repoURL: https://traefik.github.io/charts
+    chart: traefik
+    targetRevision: "41.7.1"
+    helm:
+      releaseName: traefik
+      valueFiles:
+      - $values/apps/traefik/values.yaml
+      - $values/apps/traefik/override/001/values.yaml
+  - repoURL: https://github.com/datdev2409/homelab.git
+    targetRevision: main
+    ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
