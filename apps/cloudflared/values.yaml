@@ -4,7 +4,7 @@ fullnameOverride: cloudflared
 tunnel:
   quickTunnel:
     enabled: false
-  existingSecret: cloudflared-token
+  existingSecret: cloudflared-tunnel-token
   existingSecretKey: token
 
 image:

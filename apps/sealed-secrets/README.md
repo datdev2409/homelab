@@ -67,7 +67,7 @@ name `cloudflare-api-token-secret`, and key `api-token`. Strict scope binds the
 name and namespace; changing either requires resealing. Never commit plaintext
 Secret manifests, token files, or private sealing keys.
 
-For Cloudflared, use namespace `cloudflare`, name `cloudflared-token`, and key
+For Cloudflared, use namespace `cloudflare`, name `cloudflared-tunnel-token`, and key
 `token`. Its Application deploys the cluster 001 encrypted manifest from
 `apps/cloudflared/extra/` through a separate Git source. The `ref: values`
 source alone does not deploy manifests. Additional clusters need their own

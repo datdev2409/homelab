@@ -43,7 +43,7 @@ deployment.
 tunnel:
   quickTunnel:
     enabled: false
-  existingSecret: cloudflared-token
+  existingSecret: cloudflared-tunnel-token
   existingSecretKey: token
 ```
 
@@ -95,11 +95,11 @@ of the repository validation workflow:
 
 ```sh
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml create namespace cloudflare --dry-run=client -o yaml | kubectl --kubeconfig .local/config/001/kubeconfig.yaml apply -f -
-kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n cloudflare create secret generic cloudflared-token --from-file=token=.local/credentials/001/cloudflared-token
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n cloudflare create secret generic cloudflared-tunnel-token --from-file=token=.local/credentials/001/cloudflared-token
 ```
 
 The Application now deploys `extra/cloudflare-token-sealed.yaml`, which the
-Sealed Secrets controller decrypts into `cloudflared-token`. Wait for that
+Sealed Secrets controller decrypts into `cloudflared-tunnel-token`. Wait for that
 controller before syncing this application. The manual creation commands above
 are an alternative setup path; an existing Secret must be explicitly adopted
 as described in the Sealed Secrets guide. Pods cannot start until the Secret
@@ -109,7 +109,7 @@ rebuilding, restore the sealing keys or reseal using the new certificate.
 
 The [Sealed Secrets guide](../sealed-secrets/README.md) describes an optional
 encrypted GitOps workflow and adoption of an existing token Secret. Keep the
-strictly sealed name `cloudflared-token` and namespace `cloudflare` unchanged.
+strictly sealed name `cloudflared-tunnel-token` and namespace `cloudflare` unchanged.
 
 Commit and push the manifests when ready to enable reconciliation. The root
 Application tracks `main` and creates this child Application, which
