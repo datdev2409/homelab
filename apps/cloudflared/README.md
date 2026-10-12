@@ -101,6 +101,11 @@ Secret through your local credential workflow and restart the Deployment so
 the environment variable is refreshed. Namespace deletion also deletes this
 Secret; recreate it after rebuilding the cluster.
 
+The [Sealed Secrets guide](../sealed-secrets/README.md) describes an optional
+encrypted GitOps workflow. It requires adding a Git manifest source to this
+Application and explicitly adopting any existing token Secret; installing the
+controller alone does not migrate the tunnel token.
+
 Commit and push the manifests when ready to enable reconciliation. The root
 Application tracks `main` and creates this child Application, which
 automatically syncs its resources.

@@ -43,6 +43,10 @@ through your credential workflow instead of running the create command again.
 Issuer readiness confirms ACME account registration; a successful Certificate
 request is needed to verify Cloudflare permissions and DNS validation.
 
+Alternatively, use the [Sealed Secrets workflow](../../sealed-secrets/README.md)
+to manage the DNS token as ciphertext in Git. Keep the same Secret name and
+key, and explicitly transfer ownership if the manually created Secret exists.
+
 After committing and pushing the extra Git source and issuer manifest, check:
 
 ```sh

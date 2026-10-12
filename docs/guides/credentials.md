@@ -57,6 +57,11 @@ Changes to the dotenv files are watched for reload. Avoid printing the environme
 or rendering Terragrunt configuration into committed files containing credentials.
 The local files are plaintext and require a separate protected backup.
 
+For encrypted GitOps credential manifests, see the
+[Sealed Secrets guide](../../apps/sealed-secrets/README.md). Keep original
+credentials and private sealing-key backups in protected storage outside Git;
+the controller's public certificate is used to generate committed ciphertext.
+
 For a future cluster, add its committed `.envrc` with the same global-first pattern,
 change the cluster ID/path, and allow it locally. The reserved `002` credential
 folder does not provision or configure a Talos cluster.

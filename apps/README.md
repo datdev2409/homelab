@@ -17,3 +17,7 @@ are configured separately.
 [Traefik](traefik/README.md) provides ingress through a ClusterIP Service that
 Cloudflare Tunnel can use as an origin. Workload Ingress resources explicitly
 select class `traefik`.
+
+[Sealed Secrets](sealed-secrets/README.md) installs the controller for encrypted
+GitOps credentials. Generate SealedSecrets with the target cluster's public
+certificate and keep private sealing-key backups outside Git.

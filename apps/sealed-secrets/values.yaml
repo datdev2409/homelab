@@ -1,0 +1,29 @@
+# Shared non-secret defaults. Cluster overrides are loaded afterward.
+fullnameOverride: sealed-secrets-controller
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: false
+
+# Administrators use kubeseal through the Kubernetes API; do not grant
+# every authenticated user proxy access to the controller service.
+rbac:
+  serviceProxier:
+    bind: false
+
+metrics:
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
+  dashboards:
+    create: false
