@@ -16,6 +16,7 @@ a workload by itself.
 apps/cloudflared/
 ├── values.yaml             # Shared defaults
 ├── override/001/values.yaml # Cluster-specific overrides
+├── extra/                  # Encrypted token manifest for cluster 001
 └── README.md
 ```
 
@@ -49,7 +50,9 @@ tunnel:
 The existing Secret's name and key must match these values. Quick tunnels are
 explicitly disabled. The Git source has `ref: values` and no `path`, so it
 supplies both Helm values files without deploying
-additional manifests. The chart creates no token Secret with these settings.
+additional manifests. A third Git source deploys manifests from `extra/`,
+including the cluster 001 SealedSecret. The chart creates no token Secret with
+these settings.
 
 Validate locally without contacting the cluster (the first command downloads
 the pinned public chart into a temporary directory):
@@ -95,16 +98,18 @@ kubectl --kubeconfig .local/config/001/kubeconfig.yaml create namespace cloudfla
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n cloudflare create secret generic cloudflared-token --from-file=token=.local/credentials/001/cloudflared-token
 ```
 
-This Secret is supplied separately and is not rendered or pruned by this
-Application. Pods cannot start until it exists. For token rotation, update the
-Secret through your local credential workflow and restart the Deployment so
-the environment variable is refreshed. Namespace deletion also deletes this
-Secret; recreate it after rebuilding the cluster.
+The Application now deploys `extra/cloudflare-token-sealed.yaml`, which the
+Sealed Secrets controller decrypts into `cloudflared-token`. Wait for that
+controller before syncing this application. The manual creation commands above
+are an alternative setup path; an existing Secret must be explicitly adopted
+as described in the Sealed Secrets guide. Pods cannot start until the Secret
+exists. Rotate the token by resealing it and updating the encrypted manifest,
+then restart the Deployment so the environment variable is refreshed. After
+rebuilding, restore the sealing keys or reseal using the new certificate.
 
 The [Sealed Secrets guide](../sealed-secrets/README.md) describes an optional
-encrypted GitOps workflow. It requires adding a Git manifest source to this
-Application and explicitly adopting any existing token Secret; installing the
-controller alone does not migrate the tunnel token.
+encrypted GitOps workflow and adoption of an existing token Secret. Keep the
+strictly sealed name `cloudflared-token` and namespace `cloudflare` unchanged.
 
 Commit and push the manifests when ready to enable reconciliation. The root
 Application tracks `main` and creates this child Application, which
@@ -143,8 +148,9 @@ and use `.local/config/002/kubeconfig.yaml`. Create a distinct `homelab-002`
 tunnel and explicit routes for that cluster.
 
 The child Application has a cascading-deletion finalizer. Removing it deletes
-its Deployment, ServiceAccount, and disruption budget, disconnecting the tunnel. The namespace
-and separately supplied Secret are not listed in this application's resources.
+its Deployment, ServiceAccount, disruption budget, and SealedSecret,
+disconnecting the tunnel. Deleting the SealedSecret also deletes its owned
+token Secret. The namespace is not listed in this application's resources.
 Delete the Cloudflare routes and tunnel separately when retiring the cluster.
 
 ## Sources

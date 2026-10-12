@@ -68,9 +68,10 @@ name and namespace; changing either requires resealing. Never commit plaintext
 Secret manifests, token files, or private sealing keys.
 
 For Cloudflared, use namespace `cloudflare`, name `cloudflared-token`, and key
-`token`. Its Application currently supplies only Helm values; add a separate
-Git manifest source targeting a cluster-specific directory before committing
-its SealedSecret there. The `ref: values` source alone does not deploy manifests.
+`token`. Its Application deploys the cluster 001 encrypted manifest from
+`apps/cloudflared/extra/` through a separate Git source. The `ref: values`
+source alone does not deploy manifests. Additional clusters need their own
+manifest paths and ciphertext sealed with their controller certificates.
 
 If a manually created Secret already exists, explicitly transfer ownership
 before deploying the SealedSecret. For the DNS token, this live operation is:
