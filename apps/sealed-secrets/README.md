@@ -40,6 +40,46 @@ kubectl --kubeconfig .local/config/001/kubeconfig.yaml get crd sealedsecrets.bit
 
 ## Seal credentials
 
+Generate a SealedSecret from any private `.env` file interactively:
+
+```sh
+make generate-seal-secret
+```
+
+The command prompts for exactly three inputs:
+
+```text
+SealedSecret name: cloudflared-tunnel-token
+Namespace: cloudflare
+.env path: .local/credentials/001/cloudflared.env
+```
+
+Use one `KEY=value` assignment per line. Keys become Secret keys. For
+Cloudflared, the assignment must use lowercase `token`; for cert-manager's DNS
+API token, use `api-token`. Blank lines and lines beginning with `#` are allowed.
+Use unquoted values: kubectl preserves quote characters literally. The file is
+parsed with `kubectl --from-env-file`, never sourced or evaluated as shell code.
+Keep input files private under `.local/credentials/`; do not commit them.
+
+Requires `kubectl`, `kubeseal`, a reachable Sealed Secrets controller, and
+`.local/config/001/kubeconfig.yaml`. For another configured cluster, use
+`make generate-seal-secret CLUSTER=<id>`. It fetches the current public
+certificate, seals with strict scope, and validates decryption before writing:
+
+```text
+.local/generated/sealed-secrets/<cluster>/<namespace>/<name>.yaml
+```
+
+Repeating the command replaces that generated file only after success. Copy
+the encrypted output into the consuming application's Git manifest source,
+then commit and push. For Cloudflared, the destination is
+`apps/cloudflared/extra/cloudflare-token-sealed.yaml`. The command reads the
+cluster and writes local ciphertext; it does not apply resources, commit, push,
+or restart workloads. Wait for sync before restarting applications that load
+Secrets through environment variables.
+
+The manual commands below remain useful for sealing individual raw-value files.
+
 Install `kubeseal` using the [upstream instructions](https://github.com/bitnami/sealed-secrets#kubeseal), preferably matching controller version 0.40.0.
 Fetch the public certificate after controller readiness:
 

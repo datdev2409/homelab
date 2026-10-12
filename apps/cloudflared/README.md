@@ -89,6 +89,14 @@ and set file mode 0600 and directory mode 0700. Do not commit the token, include
 it in command arguments, or paste it into logs. The connector uses a tunnel
 token, not the Cloudflare account API token.
 
+To generate encrypted YAML interactively, put the tunnel token in a private
+`.env` file as `token=<your tunnel token>` (use the lowercase key `token`), then
+run `make generate-seal-secret`. Enter name `cloudflared-tunnel-token`, namespace
+`cloudflare`, and the `.env` path. Copy the generated encrypted YAML to
+`apps/cloudflared/extra/cloudflare-token-sealed.yaml`, commit and push, wait for
+synchronization, then restart Cloudflared to refresh its token environment
+variable. See the [generic sealing guide](../sealed-secrets/README.md#seal-credentials).
+
 Before enabling the Application, run these commands locally from the repository
 root. These commands modify the cluster; they are setup instructions, not part
 of the repository validation workflow:

@@ -1,7 +1,7 @@
 CLUSTER ?= 001
 export TG_TF_PATH ?= tofu
 
-.PHONY: bootstrap teardown fmt-terragrunt plan-base-env apply-base-env plan-cluster-bootstrap apply-cluster-bootstrap port-forward-argocd
+.PHONY: bootstrap teardown fmt-terragrunt plan-base-env apply-base-env plan-cluster-bootstrap apply-cluster-bootstrap port-forward-argocd generate-seal-secret
 bootstrap:
 	@./scripts/bootstrap.sh "$(CLUSTER)"
 
@@ -29,3 +29,7 @@ apply-cluster-bootstrap:
 # Open https://localhost:8080; stop the port-forward with Ctrl-C.
 port-forward-argocd:
 	@kubectl --kubeconfig ".local/config/$(CLUSTER)/kubeconfig.yaml" -n argocd port-forward svc/argocd-server 8080:443
+
+# Prompt for the Secret name, namespace, and .env path; write encrypted YAML.
+generate-seal-secret:
+	@bash ./scripts/generate-seal-secret.sh "$(CLUSTER)"
