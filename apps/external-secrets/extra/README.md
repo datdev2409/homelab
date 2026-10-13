@@ -11,6 +11,10 @@ through service account `external-secrets/aws-secretsmanager`, defined in
 
 ESO requests short-lived service account tokens with audience
 `sts.amazonaws.com` and exchanges them through `sts:AssumeRoleWithWebIdentity`.
+The store leaves `serviceAccountRef.audiences` unset because ESO supplies
+`sts.amazonaws.com` by default. Adding it there appends a duplicate audience
+in ESO v2.12.0, causing AWS STS to reject the token for multiple audiences
+without an authorized-party claim.
 The `eks.amazonaws.com/role-arn` annotation is read by ESO even on this kubeadm
 cluster; this store-specific flow does not require a pod identity webhook.
 The store omits `aws.role`, which would trigger an additional `sts:AssumeRole`
@@ -52,6 +56,20 @@ accordingly. Existing Sealed Secrets resources retain their current owner.
 
 ## Consumers and readiness
 
+`external-secret.yaml` defines ExternalSecret `homelab-secrets` in namespace
+`external-secrets`, reading
+`arn:aws:secretsmanager:ap-southeast-1:803537989070:secret:homelab-secrets-22JqN4`
+through the shared store. It extracts all fields from the AWS secret's JSON
+object into Kubernetes Secret `external-secrets/homelab-secrets` and refreshes
+every hour. This assumes the AWS secret contains a JSON object with keys valid
+for a Kubernetes Secret. Its contents are not fetched during local validation.
+
+Sync wave `2` places the consumer after the store. ESO owns the generated
+Secret through `creationPolicy: Owner`; removing the ExternalSecret can delete
+that Secret. `deletionPolicy: Retain` keeps the last synchronized Secret if the
+remote AWS secret is deleted. Ensure no other controller owns the target Secret.
+The reader role needs access to the exact ARN above.
+
 Workload ExternalSecrets select the store with:
 
 ```yaml
@@ -67,6 +85,8 @@ credentials or secret values:
 ```sh
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml get clustersecretstore aws-secretsmanager
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml wait --for=condition=Ready clustersecretstore/aws-secretsmanager --timeout=120s
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n external-secrets get externalsecret homelab-secrets
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n external-secrets wait --for=condition=Ready externalsecret/homelab-secrets --timeout=120s
 ```
 
 Store readiness verifies provider initialization; a successful ExternalSecret
@@ -75,5 +95,6 @@ reconciliation is still needed to verify access to a specific secret.
 ## Sources
 
 - [ESO AWS authentication](https://external-secrets.io/latest/provider/aws-access/)
+- [Extract structured data](https://external-secrets.io/latest/guides/all-keys-one-secret/)
 - [AWS IAM OIDC provider requirements](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html)
 - [AWS OIDC role trust](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html)

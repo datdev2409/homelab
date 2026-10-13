@@ -17,8 +17,10 @@ Argo CD owns the deployments, RBAC, and ESO CRDs through the Helm chart.
 Server-side apply handles the large CRDs. ESO owns Secrets generated from
 ExternalSecrets. The separate Git source deploys an AWS Secrets Manager
 ClusterSecretStore and dedicated OIDC service account from `extra/`.
-See the [store and AWS trust setup](extra/README.md). ExternalSecret consumers
-are configured separately. Keep plaintext credentials outside Git.
+It also deploys ExternalSecret `homelab-secrets`, which extracts the configured
+AWS secret into Secret `external-secrets/homelab-secrets`.
+See the [store, consumer, and AWS trust setup](extra/README.md).
+Keep plaintext credentials outside Git.
 
 Existing Sealed Secrets resources retain their current owner. Do not let ESO
 and Sealed Secrets reconcile the same target Secret. Put namespaced

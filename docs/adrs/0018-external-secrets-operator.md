@@ -27,8 +27,10 @@ Application; their readiness has not been verified.
 
 The shared store is available to consumers across namespaces. Its IAM policy
 must scope access to intended secrets. Keep ExternalSecrets with their
-consuming application's cluster-specific manifests; consumer resources remain
-separate. Store plaintext credentials outside Git.
+consuming application's cluster-specific manifests. The initial consumer is
+ExternalSecret `external-secrets/homelab-secrets`, reading the specified
+`homelab-secrets` AWS secret into a same-named Kubernetes Secret.
+Store plaintext credentials outside Git.
 
 This complements [ADR 0017](0017-sealed-secrets.md). Existing Sealed Secrets
 consumers are not migrated. Each target Secret must have only one controller
