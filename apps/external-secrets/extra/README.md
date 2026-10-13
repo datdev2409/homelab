@@ -1,11 +1,11 @@
-# AWS Secrets Manager store
+# AWS Systems Manager Parameter Store
 
 The External Secrets Application deploys Kubernetes manifests from this
 directory, including subdirectories, alongside the Helm chart.
 
-`cluster-secret-store.yaml` defines ClusterSecretStore `aws-secretsmanager`
-for AWS Secrets Manager in `ap-southeast-1`. It uses JWT/OIDC authentication
-through service account `external-secrets/aws-secretsmanager`, defined in
+`cluster-secret-store.yaml` defines ClusterSecretStore `aws-parameterstore`
+for AWS Systems Manager Parameter Store in `ap-southeast-1`. It uses JWT/OIDC
+authentication through service account `external-secrets/aws-secretsmanager`, defined in
 `service-account.yaml` and annotated with IAM role
 `arn:aws:iam::803537989070:role/homelab-secrets-reader`.
 
@@ -41,10 +41,10 @@ prerequisites are supplied:
    `sts:AssumeRoleWithWebIdentity`, restricted with `StringEquals` conditions
    for audience `sts.amazonaws.com` and subject
    `system:serviceaccount:external-secrets:aws-secretsmanager`.
-4. Give the role access to the intended Secrets Manager secrets, including
-   `secretsmanager:GetSecretValue` and `secretsmanager:DescribeSecret`.
-   Customer-managed KMS encryption may also require `kms:Decrypt`. Scope
-   policies to the intended secret and key ARNs.
+4. Give the role `ssm:GetParameter` access to
+   `arn:aws:ssm:ap-southeast-1:803537989070:parameter/homelab/cloudflared-tunnel-token`.
+   For a `SecureString` encrypted with a customer-managed key, it may also need
+   `kms:Decrypt` scoped to that key.
 
 The exact provider ARN and trust condition keys depend on the cluster's issuer
 URL. Use the issuer host and path without `https://` for the condition key
@@ -56,26 +56,13 @@ accordingly. Existing Sealed Secrets resources retain their current owner.
 
 ## Consumers and readiness
 
-`external-secret.yaml` defines ExternalSecret `homelab-secrets` in namespace
-`external-secrets`, reading
-`arn:aws:secretsmanager:ap-southeast-1:803537989070:secret:homelab-secrets-22JqN4`
-through the shared store. It extracts all fields from the AWS secret's JSON
-object into Kubernetes Secret `external-secrets/homelab-secrets` and refreshes
-every hour. This assumes the AWS secret contains a JSON object with keys valid
-for a Kubernetes Secret. Its contents are not fetched during local validation.
-
-Sync wave `2` places the consumer after the store. ESO owns the generated
-Secret through `creationPolicy: Owner`; removing the ExternalSecret can delete
-that Secret. `deletionPolicy: Retain` keeps the last synchronized Secret if the
-remote AWS secret is deleted. Ensure no other controller owns the target Secret.
-The reader role needs access to the exact ARN above.
-
-Workload ExternalSecrets select the store with:
+The Cloudflared application has its ExternalSecret in its own
+`apps/cloudflared/extra/` source. It selects this store with:
 
 ```yaml
 spec:
   secretStoreRef:
-    name: aws-secretsmanager
+    name: aws-parameterstore
     kind: ClusterSecretStore
 ```
 
@@ -83,10 +70,10 @@ After reconciliation and AWS trust setup, check readiness without printing
 credentials or secret values:
 
 ```sh
-kubectl --kubeconfig .local/config/001/kubeconfig.yaml get clustersecretstore aws-secretsmanager
-kubectl --kubeconfig .local/config/001/kubeconfig.yaml wait --for=condition=Ready clustersecretstore/aws-secretsmanager --timeout=120s
-kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n external-secrets get externalsecret homelab-secrets
-kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n external-secrets wait --for=condition=Ready externalsecret/homelab-secrets --timeout=120s
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml get clustersecretstore aws-parameterstore
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml wait --for=condition=Ready clustersecretstore/aws-parameterstore --timeout=120s
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n cloudflare get externalsecret cloudflared-tunnel-token
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n cloudflare wait --for=condition=Ready externalsecret/cloudflared-tunnel-token --timeout=120s
 ```
 
 Store readiness verifies provider initialization; a successful ExternalSecret
@@ -95,6 +82,7 @@ reconciliation is still needed to verify access to a specific secret.
 ## Sources
 
 - [ESO AWS authentication](https://external-secrets.io/latest/provider/aws-access/)
+- [AWS Parameter Store](https://external-secrets.io/latest/provider/aws-parameter-store/)
 - [Extract structured data](https://external-secrets.io/latest/guides/all-keys-one-secret/)
 - [AWS IAM OIDC provider requirements](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html)
 - [AWS OIDC role trust](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html)

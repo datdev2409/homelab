@@ -23,6 +23,6 @@ certificate and keep private sealing-key backups outside Git.
 
 [External Secrets Operator](external-secrets/README.md) installs the controller,
 webhook, certificate controller, and CRDs for synchronizing Secrets from external
-providers. Its AWS Secrets Manager ClusterSecretStore uses OIDC in
+providers. Its AWS Systems Manager Parameter Store ClusterSecretStore uses OIDC in
 `ap-southeast-1`; AWS trust setup and consumer resources are configured
 separately. Existing Sealed Secrets consumers retain their current owner.

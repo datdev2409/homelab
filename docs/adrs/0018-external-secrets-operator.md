@@ -16,8 +16,8 @@ controller. Initial combined requests are 100m CPU and 256 MiB memory, with
 owns the installation and CRDs; ESO owns Secrets generated from ExternalSecrets.
 OpenTofu and Ansible ownership remain as defined in ADR 0008.
 
-Use AWS Secrets Manager in `ap-southeast-1` through ClusterSecretStore
-`aws-secretsmanager`. Authenticate through OIDC using a dedicated service
+Use AWS Systems Manager Parameter Store in `ap-southeast-1` through
+ClusterSecretStore `aws-parameterstore`. Authenticate through OIDC using a dedicated service
 account `external-secrets/aws-secretsmanager` annotated with role
 `arn:aws:iam::803537989070:role/homelab-secrets-reader`. The cluster's service
 account issuer must be registered as an AWS IAM OIDC provider, and the role
@@ -26,10 +26,10 @@ Issuer publication and AWS IAM configuration are prerequisites outside this
 Application; their readiness has not been verified.
 
 The shared store is available to consumers across namespaces. Its IAM policy
-must scope access to intended secrets. Keep ExternalSecrets with their
-consuming application's cluster-specific manifests. The initial consumer is
-ExternalSecret `external-secrets/homelab-secrets`, reading the specified
-`homelab-secrets` AWS secret into a same-named Kubernetes Secret.
+must scope access to intended parameters. Keep ExternalSecrets with their
+consuming application's cluster-specific manifests. The Cloudflared consumer
+reads SSM parameter `/homelab/cloudflared-tunnel-token` into its Kubernetes
+Secret.
 Store plaintext credentials outside Git.
 
 This complements [ADR 0017](0017-sealed-secrets.md). Existing Sealed Secrets

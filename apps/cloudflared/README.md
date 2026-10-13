@@ -16,7 +16,7 @@ a workload by itself.
 apps/cloudflared/
 ├── values.yaml             # Shared defaults
 ├── override/001/values.yaml # Cluster-specific overrides
-├── extra/                  # Encrypted token manifest for cluster 001
+├── extra/                  # ExternalSecret for the tunnel token
 └── README.md
 ```
 
@@ -51,8 +51,8 @@ The existing Secret's name and key must match these values. Quick tunnels are
 explicitly disabled. The Git source has `ref: values` and no `path`, so it
 supplies both Helm values files without deploying
 additional manifests. A third Git source deploys manifests from `extra/`,
-including the cluster 001 SealedSecret. The chart creates no token Secret with
-these settings.
+including the ExternalSecret for the cluster 001 tunnel token. The chart
+creates no token Secret with these settings.
 
 Validate locally without contacting the cluster (the first command downloads
 the pinned public chart into a temporary directory):
@@ -81,43 +81,22 @@ outage. Keep the replica count fixed instead of attaching an autoscaler.
 ## Tunnel credentials
 
 Cluster 001 deploys into the `cloudflare` namespace, as selected in its
-Application destination. Create the token Secret in that same namespace.
+Application destination. ESO creates the token Secret in that namespace.
 
-Create a remotely managed tunnel named `homelab-001` in Cloudflare. Save only its
-token in `.local/credentials/001/cloudflared-token`, without a trailing newline,
-and set file mode 0600 and directory mode 0700. Do not commit the token, include
-it in command arguments, or paste it into logs. The connector uses a tunnel
-token, not the Cloudflare account API token.
+Create a remotely managed tunnel named `homelab-001` in Cloudflare. Store its
+tunnel token as a SecureString SSM parameter at
+`/homelab/cloudflared-tunnel-token` in `ap-southeast-1`. The ExternalSecret
+reads ARN
+`arn:aws:ssm:ap-southeast-1:803537989070:parameter/homelab/cloudflared-tunnel-token`
+and creates Secret `cloudflare/cloudflared-tunnel-token` with key `token`.
+Do not commit the token or include it in command arguments or logs. The
+connector uses a tunnel token, not the Cloudflare account API token.
 
-To generate encrypted YAML interactively, put the tunnel token in a private
-`.env` file as `token=<your tunnel token>` (use the lowercase key `token`), then
-run `make generate-seal-secret`. Enter name `cloudflared-tunnel-token`, namespace
-`cloudflare`, and the `.env` path. Copy the generated encrypted YAML to
-`apps/cloudflared/extra/cloudflare-token-sealed.yaml`, commit and push, wait for
-synchronization, then restart Cloudflared to refresh its token environment
-variable. See the [generic sealing guide](../sealed-secrets/README.md#seal-credentials).
-
-Before enabling the Application, run these commands locally from the repository
-root. These commands modify the cluster; they are setup instructions, not part
-of the repository validation workflow:
-
-```sh
-kubectl --kubeconfig .local/config/001/kubeconfig.yaml create namespace cloudflare --dry-run=client -o yaml | kubectl --kubeconfig .local/config/001/kubeconfig.yaml apply -f -
-kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n cloudflare create secret generic cloudflared-tunnel-token --from-file=token=.local/credentials/001/cloudflared-token
-```
-
-The Application now deploys `extra/cloudflare-token-sealed.yaml`, which the
-Sealed Secrets controller decrypts into `cloudflared-tunnel-token`. Wait for that
-controller before syncing this application. The manual creation commands above
-are an alternative setup path; an existing Secret must be explicitly adopted
-as described in the Sealed Secrets guide. Pods cannot start until the Secret
-exists. Rotate the token by resealing it and updating the encrypted manifest,
-then restart the Deployment so the environment variable is refreshed. After
-rebuilding, restore the sealing keys or reseal using the new certificate.
-
-The [Sealed Secrets guide](../sealed-secrets/README.md) describes an optional
-encrypted GitOps workflow and adoption of an existing token Secret. Keep the
-strictly sealed name `cloudflared-tunnel-token` and namespace `cloudflare` unchanged.
+The ExternalSecret refreshes the target Secret hourly. After rotating the SSM
+parameter, wait for ExternalSecret readiness and restart the Cloudflared
+Deployment to load the updated environment variable. The ExternalSecret replaces
+the prior SealedSecret-owned token Secret; keep only one controller responsible
+for the target Secret.
 
 Commit and push the manifests when ready to enable reconciliation. The root
 Application tracks `main` and creates this child Application, which
@@ -156,8 +135,8 @@ and use `.local/config/002/kubeconfig.yaml`. Create a distinct `homelab-002`
 tunnel and explicit routes for that cluster.
 
 The child Application has a cascading-deletion finalizer. Removing it deletes
-its Deployment, ServiceAccount, disruption budget, and SealedSecret,
-disconnecting the tunnel. Deleting the SealedSecret also deletes its owned
+its Deployment, ServiceAccount, disruption budget, and ExternalSecret,
+disconnecting the tunnel. Deleting the ExternalSecret can delete its owned
 token Secret. The namespace is not listed in this application's resources.
 Delete the Cloudflare routes and tunnel separately when retiring the cluster.
 
@@ -165,6 +144,7 @@ Delete the Cloudflare routes and tunnel separately when retiring the cluster.
 
 - [HelmForge Cloudflared chart](https://helmforge.dev/docs/charts/cloudflared/)
 - [Argo CD external Helm values](https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/)
+- [ESO AWS Parameter Store](https://external-secrets.io/latest/provider/aws-parameter-store/)
 - [Cloudflare Kubernetes deployment](https://developers.cloudflare.com/tunnel/guides/kubernetes/)
 - [Cloudflared 2026.10.0 release](https://github.com/cloudflare/cloudflared/releases/tag/2026.10.0)
 - [Cloudflare Access setup](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/)

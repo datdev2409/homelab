@@ -50,7 +50,7 @@ Child Applications include [Cloudflared](apps/cloudflared/README.md) and
 [Traefik](apps/traefik/README.md) ingress and
 [Sealed Secrets](apps/sealed-secrets/README.md) for encrypted GitOps credentials,
 and [External Secrets Operator](apps/external-secrets/README.md) for external
-secret synchronization using AWS Secrets Manager and OIDC (AWS trust setup
+secret synchronization using AWS Systems Manager Parameter Store and OIDC (AWS trust setup
 remains separate);
 monitoring remains a placeholder. See the
 [bootstrap module](infrastructure/root_modules/cluster-bootstrap/README.md).
