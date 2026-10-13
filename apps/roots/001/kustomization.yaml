@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - sealed-secrets.yaml
+  - external-secrets.yaml
   - cloudflared.yaml
   - cert-manager.yaml
   - traefik.yaml

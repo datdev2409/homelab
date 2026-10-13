@@ -48,7 +48,10 @@ the root Application; private Git access credentials must be configured separate
 Child Applications include [Cloudflared](apps/cloudflared/README.md) and
 [cert-manager](apps/cert-manager/README.md), plus
 [Traefik](apps/traefik/README.md) ingress and
-[Sealed Secrets](apps/sealed-secrets/README.md) for encrypted GitOps credentials;
+[Sealed Secrets](apps/sealed-secrets/README.md) for encrypted GitOps credentials,
+and [External Secrets Operator](apps/external-secrets/README.md) for external
+secret synchronization using AWS Secrets Manager and OIDC (AWS trust setup
+remains separate);
 monitoring remains a placeholder. See the
 [bootstrap module](infrastructure/root_modules/cluster-bootstrap/README.md).
 Ansible playbooks live only in `ansible/playbooks/` and import task files

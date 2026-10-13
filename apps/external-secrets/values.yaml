@@ -1,0 +1,34 @@
+# Shared non-secret defaults. Cluster overrides are loaded afterward.
+installCRDs: true
+
+replicaCount: 1
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+
+webhook:
+  create: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+certController:
+  create: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+# Monitoring is not installed yet.
+serviceMonitor:
+  enabled: false
