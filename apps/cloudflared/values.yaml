@@ -9,7 +9,7 @@ tunnel:
 
 image:
   repository: cloudflare/cloudflared
-  tag: "2026.10.0"
+  tag: "2026.10.1"
 
 replicaCount: 2
 
