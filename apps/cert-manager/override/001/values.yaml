@@ -1,2 +1,4 @@
-# Cluster 001 uses the shared defaults.
-{}
+# Validate public ACME records independently of the LAN's split DNS servers.
+extraArgs:
+  - --dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53
+  - --dns01-recursive-nameservers-only

@@ -10,6 +10,10 @@ last. The root Kustomization explicitly includes
 `apps/roots/001/cert-manager.yaml`. OpenTofu continues to own Argo CD and the
 root Application; Argo CD owns cert-manager and its CRDs.
 
+Cluster 001 uses public recursive resolvers `1.1.1.1:53` and `8.8.8.8:53`
+for DNS-01 self-checks, independent of LAN split DNS. Permit outbound UDP/TCP
+53 from the controller to these resolvers.
+
 A third Git source deploys Kubernetes manifests from `extra/`, recursively.
 Add ClusterIssuer manifests there; see the [extra resources guide](extra/README.md)
 for sync ordering and credential references. The `ref: values` source remains
