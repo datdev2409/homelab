@@ -3,17 +3,17 @@ kind: Ingress
 metadata:
   name: web-test
   annotations:
-    # No LoadBalancer address is assigned to this ClusterIP tunnel origin.
+    # Traefik's publishedService is disabled; verify routing directly.
     argocd.argoproj.io/ignore-healthcheck: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
   ingressClassName: traefik
   tls:
   - hosts:
-    - homelab.datnguyen.me
+    - test.datnguyen.me
     secretName: web-test-tls
   rules:
-  - host: homelab.datnguyen.me
+  - host: test.datnguyen.me
     http:
       paths:
       - path: /
@@ -35,7 +35,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: homelab.datnguyen.me
+  - host: test.datnguyen.me
     http:
       paths:
       - path: /

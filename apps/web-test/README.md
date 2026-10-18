@@ -1,6 +1,6 @@
 # Web ingress and certificate test
 
-Cluster 001 serves `homelab.datnguyen.me` through Traefik. The `web-test`
+Cluster 001 serves `test.datnguyen.me` through Traefik. The `web-test`
 Argo CD Application deploys a Deployment, ClusterIP Service, Ingress, and
 explicit cert-manager Certificate into namespace `web-test`.
 
@@ -14,7 +14,7 @@ namespace. The Ingress references this same Secret. It has no cert-manager
 issuer annotation because the Certificate is managed explicitly.
 
 Argo CD's default Ingress health check requires a LoadBalancer address, which
-this ClusterIP tunnel setup does not assign. The Ingresses exclude that check
+Traefik does not publish to Ingress status in this setup. The Ingresses exclude that check
 from Application health using `argocd.argoproj.io/ignore-healthcheck`; Deployment
 and Certificate health remain checked. Verify actual routing using the
 requests below.
@@ -39,11 +39,19 @@ ClusterIssuer. No public HTTP challenge endpoint is required.
 
 ## Verify the origin certificate
 
+Configure local DNS or a hosts-file entry mapping `test.datnguyen.me` to
+Traefik's MetalLB IP `192.168.1.30`. After issuance, open
+`https://test.datnguyen.me` or verify directly without a DNS override:
+
+```sh
+curl --resolve test.datnguyen.me:443:192.168.1.30 https://test.datnguyen.me/
+```
+
 Port-forward Traefik's HTTPS Service in a separate terminal:
 
 ```sh
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n traefik port-forward svc/traefik 8443:443
-curl --noproxy '*' --resolve homelab.datnguyen.me:8443:127.0.0.1 https://homelab.datnguyen.me:8443/
+curl --noproxy '*' --resolve test.datnguyen.me:8443:127.0.0.1 https://test.datnguyen.me:8443/
 ```
 
 This verifies the certificate served by Traefik with hostname validation and
@@ -51,10 +59,10 @@ the backend response. Do not use `-k`; it would skip certificate verification.
 
 ## Public Cloudflare route
 
-Cloudflare's published hostname must route `homelab.datnguyen.me` to
+Cloudflare's published hostname must route `test.datnguyen.me` to
 `http://traefik.traefik.svc.cluster.local:80`, preserving the Host header.
 Alternatively, use `https://traefik.traefik.svc.cluster.local:443` with Origin
-Server Name `homelab.datnguyen.me` for verified TLS to Traefik.
+Server Name `test.datnguyen.me` for verified TLS to Traefik.
 
 The TLS Ingress uses the `websecure` entrypoint. To support the HTTP tunnel
 origin, the manifest also creates a plain HTTP Ingress on `web` for the same
@@ -62,7 +70,7 @@ hostname. Public HTTPS alone verifies Cloudflare's edge
 certificate; the direct origin test above verifies cert-manager's certificate.
 
 ```sh
-curl https://homelab.datnguyen.me/
+curl https://test.datnguyen.me/
 ```
 
 ## Teardown
