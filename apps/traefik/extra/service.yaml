@@ -4,6 +4,7 @@ metadata:
   name: traefik-nodeport-svc
   namespace: traefik
 spec:
+  type: NodePort
   selector:
     app.kubernetes.io/instance=traefik-traefik
   ports:
