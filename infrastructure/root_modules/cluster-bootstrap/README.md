@@ -152,16 +152,18 @@ direnv exec .. terragrunt init
 
 ## UI and verification
 
-From the repository root, check pods and start a local HTTPS port-forward:
+From the repository root, check pods and start a local HTTP port-forward:
 
 ```sh
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n argocd get pods
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n argocd get application root-001
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n argocd describe application root-001
-kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n argocd port-forward svc/argocd-server 8080:443
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n argocd port-forward svc/argocd-server 8080:80
 ```
 
-Open `https://localhost:8080` (Argo CD's default self-signed certificate).
+Open `http://localhost:8080`. The module defaults disable backend TLS because
+Traefik terminates HTTPS; a direct port-forward uses HTTP. For HTTPS access,
+use the [Argo CD Ingress](../../../apps/argocd-ingress/README.md).
 The initial username is `admin`. Retrieve the generated password locally in a
 separate terminal; do not commit or paste its output into logs:
 

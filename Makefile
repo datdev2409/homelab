@@ -34,9 +34,9 @@ plan-cloudflare:
 apply-cloudflare:
 	@cd infrastructure/cloudflare && direnv exec ../.. sh -c ': "$${CLOUDFLARE_API_TOKEN:?Set CLOUDFLARE_API_TOKEN in .local/credentials/.env}"; exec terragrunt apply'
 
-# Open https://localhost:8080; stop the port-forward with Ctrl-C.
+# Open http://localhost:8080; stop the port-forward with Ctrl-C.
 port-forward-argocd:
-	@kubectl --kubeconfig ".local/config/$(CLUSTER)/kubeconfig.yaml" -n argocd port-forward svc/argocd-server 8080:443
+	@kubectl --kubeconfig ".local/config/$(CLUSTER)/kubeconfig.yaml" -n argocd port-forward svc/argocd-server 8080:80
 
 # Seal a Secret manifest beside its input; prompt for omitted file paths.
 generate-seal-secret:
