@@ -55,9 +55,8 @@ of the root before expiry; cert-manager does not automatically reissue existing
 leaf certificates when the signing CA changes. See the
 [CA issuer documentation](https://cert-manager.io/docs/configuration/ca/).
 
-Moving from the earlier Argo CD namespace-scoped CA creates a new trust root.
-Trust `home-apra-root-ca` on clients after the shared issuer is ready; the
-Argo CD Certificate now references this ClusterIssuer and will be reissued.
+Argo CD uses `argocd.datnguyen.me` with `letsencrypt-prod`; this private CA
+remains available for internal `home.apra` workloads.
 
 ## Let's Encrypt with Cloudflare DNS-01
 

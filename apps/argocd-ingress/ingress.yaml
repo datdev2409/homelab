@@ -10,10 +10,10 @@ spec:
   ingressClassName: traefik
   tls:
   - hosts:
-    - argocd.home.apra
+    - argocd.datnguyen.me
     secretName: argocd-ingress-tls
   rules:
-  - host: argocd.home.apra
+  - host: argocd.datnguyen.me
     http:
       paths:
       - path: /

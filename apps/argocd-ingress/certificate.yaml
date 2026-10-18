@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: argocd-ingress-tls
   dnsNames:
-  - argocd.home.apra
+  - argocd.datnguyen.me
   duration: 2160h
   renewBefore: 720h
   privateKey:
@@ -14,6 +14,6 @@ spec:
     size: 256
     rotationPolicy: Always
   issuerRef:
-    name: home-apra-ca
+    name: letsencrypt-prod
     kind: ClusterIssuer
     group: cert-manager.io
