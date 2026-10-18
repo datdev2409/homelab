@@ -3,6 +3,11 @@ crds:
   install: true
   keep: true
 
+# Traefik terminates TLS; the in-cluster Argo CD backend uses HTTP.
+configs:
+  params:
+    server.insecure: true
+
 controller:
   replicas: 1
   resources:

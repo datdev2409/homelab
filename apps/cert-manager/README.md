@@ -48,6 +48,10 @@ workload certificates; see the [setup instructions](extra/README.md).
 A Cloudflared tunnel token is not a Cloudflare DNS API token and cannot be used
 for DNS-01 validation. Workload Certificates are configured separately.
 
+`extra/home-apra-issuer.yaml` bootstraps the private `home-apra-ca`
+ClusterIssuer for internal `home.apra` services, including Argo CD. Clients
+must trust its root certificate; see the [extra resources guide](extra/README.md).
+
 ## Teardown
 
 The Application has a cascading-deletion finalizer. Review dependent

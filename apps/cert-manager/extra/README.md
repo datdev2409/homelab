@@ -17,6 +17,48 @@ Keep issuer credentials out of Git. Reference separately supplied Kubernetes
 Secrets; with the default chart settings, ClusterIssuer credential Secrets
 belong in the `cert-manager` namespace.
 
+## Private CA for home.apra
+
+`home-apra-issuer.yaml` creates a bootstrap SelfSigned Issuer in wave 1, a
+private root CA Certificate in wave 2, and ClusterIssuer `home-apra-ca` in
+wave 3. The root Certificate and generated Secret `home-apra-root-ca` live
+in namespace `cert-manager`, where ClusterIssuers look up signing Secrets.
+No private keys are stored in Git.
+
+Workloads in any namespace can request certificates using:
+
+```yaml
+spec:
+  dnsNames:
+  - app.home.apra
+  secretName: app-tls
+  issuerRef:
+    name: home-apra-ca
+    kind: ClusterIssuer
+    group: cert-manager.io
+```
+
+TLS Secrets are created in each Certificate's namespace. This issuer is intended
+for `home.apra`; its name does not enforce DNS name restrictions. Keep access
+to Certificate requests limited to trusted cluster users.
+
+Clients must trust the private root. Export only its public certificate:
+
+```sh
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n cert-manager get secret home-apra-root-ca -o jsonpath='{.data.tls\.crt}' | base64 --decode > /tmp/home-apra-root-ca.crt
+```
+
+Import that certificate into client trust stores and configure local DNS for
+the requested hostnames. Back up the CA Secret privately. The root lasts ten
+years and starts renewal a year before expiry. Plan renewal and redistribution
+of the root before expiry; cert-manager does not automatically reissue existing
+leaf certificates when the signing CA changes. See the
+[CA issuer documentation](https://cert-manager.io/docs/configuration/ca/).
+
+Moving from the earlier Argo CD namespace-scoped CA creates a new trust root.
+Trust `home-apra-root-ca` on clients after the shared issuer is ready; the
+Argo CD Certificate now references this ClusterIssuer and will be reissued.
+
 ## Let's Encrypt with Cloudflare DNS-01
 
 `cluster-issuer.yaml` defines `letsencrypt-prod`, using Let's Encrypt's
