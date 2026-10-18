@@ -37,9 +37,9 @@ apply-cloudflare:
 port-forward-argocd:
 	@kubectl --kubeconfig ".local/config/$(CLUSTER)/kubeconfig.yaml" -n argocd port-forward svc/argocd-server 8080:443
 
-# Prompt for the Secret name, namespace, and .env path; write encrypted YAML.
+# Seal a Secret manifest beside its input; prompt for omitted file paths.
 generate-seal-secret:
-	@bash ./scripts/generate-seal-secret.sh "$(CLUSTER)"
+	@bash ./scripts/generate-seal-secret.sh "$(SECRET_FILE)" "$(CERT_FILE)"
 
 # Standalone Ubuntu LXC connector; use the selected cluster's private token.
 setup-cloudflared:

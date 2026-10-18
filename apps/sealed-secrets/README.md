@@ -40,43 +40,41 @@ kubectl --kubeconfig .local/config/001/kubeconfig.yaml get crd sealedsecrets.bit
 
 ## Seal credentials
 
-Generate a SealedSecret from any private `.env` file interactively:
+Generate a SealedSecret offline from an existing Kubernetes Secret YAML:
 
 ```sh
-make generate-seal-secret
+bash scripts/generate-seal-secret.sh /path/to/secret-name.yaml sealed-secrets-pub.crt
+# Or pass the same paths through Make:
+make generate-seal-secret SECRET_FILE=/path/to/secret-name.yaml CERT_FILE=sealed-secrets-pub.crt
 ```
 
-The command prompts for exactly three inputs:
+Run `make generate-seal-secret` without paths to use interactive prompts:
 
 ```text
-SealedSecret name: cloudflared-tunnel-token
-Namespace: cloudflare
-.env path: .local/credentials/001/cloudflared.env
+Secret YAML path: /path/to/secret-name.yaml
+Public certificate path [/path/to/homelab/sealed-secrets-pub.crt]:
 ```
 
-Use one `KEY=value` assignment per line. Keys become Secret keys. For
-Cloudflared, the assignment must use lowercase `token`; for cert-manager's DNS
-API token, use `api-token`. Blank lines and lines beginning with `#` are allowed.
-Use unquoted values: kubectl preserves quote characters literally. The file is
-parsed with `kubectl --from-env-file`, never sourced or evaluated as shell code.
-Keep input files private under `.local/credentials/`; do not commit them.
+Press Enter at the certificate prompt to use `sealed-secrets-pub.crt` at the
+repository root. Explicit relative paths are resolved from the working directory.
+The input must be a Kubernetes `kind: Secret` manifest with `metadata.name`,
+an explicit `metadata.namespace`, and `data` (base64 values) or `stringData`
+(plain values). Keep the original Secret manifest private and outside Git.
 
-Requires `kubectl`, `kubeseal`, a reachable Sealed Secrets controller, and
-`.local/config/001/kubeconfig.yaml`. For another configured cluster, use
-`make generate-seal-secret CLUSTER=<id>`. It fetches the current public
-certificate, seals with strict scope, and validates decryption before writing:
+Only `kubeseal` is required; no kubeconfig or running controller is needed.
+The certificate must belong to the intended cluster's Sealed Secrets controller.
+The script seals with strict scope and writes `secret-name-sealed.yaml` in the
+same directory as `secret-name.yaml` (also accepts `.yml` input). Repeating the
+command replaces the output only after successful sealing. It does not validate
+decryption against the controller; this can be checked separately with
+`kubeseal --validate` and the appropriate controller and kubeconfig options.
+See [upstream usage](https://github.com/bitnami/sealed-secrets#usage).
 
-```text
-.local/generated/sealed-secrets/<cluster>/<namespace>/<name>.yaml
-```
-
-Repeating the command replaces that generated file only after success. Copy
-the encrypted output into the consuming application's Git manifest source,
-then commit and push. For Cloudflared, the destination is
-`apps/cloudflared/extra/cloudflare-token-sealed.yaml`. The command reads the
-cluster and writes local ciphertext; it does not apply resources, commit, push,
-or restart workloads. Wait for sync before restarting applications that load
-Secrets through environment variables.
+Copy only the encrypted output into the consuming application's Git manifest
+source, then commit and push. For Cloudflared, the destination is
+`apps/cloudflared/extra/cloudflare-token-sealed.yaml`. The script does not apply
+resources, commit, push, or restart workloads. Wait for sync before restarting
+applications that load Secrets through environment variables.
 
 The manual commands below remain useful for sealing individual raw-value files.
 
