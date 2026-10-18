@@ -7,4 +7,5 @@ resources:
   - cloudflared.yaml
   - cert-manager.yaml
   - traefik.yaml
+  - argocd-ingress
   # - web-test.yaml

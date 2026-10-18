@@ -26,7 +26,7 @@ locals {
     vm_disk_storage = "local-lvm"
     network_bridge  = "vmbr0"
     network_gateway = "192.168.1.1"
-    dns_server      = "1.1.1.1"
+    dns_server      = "192.168.1.10" # Use 1.1.1.1 if the DNS server is not available yet
     cloud_init_user = "ubuntu"
     image = {
       mode         = "cloud_image"
@@ -56,6 +56,18 @@ locals {
         # Budget additional RAM and verify ID/address availability before starting.
         started = true
         on_boot = true
+      },
+      dns-server = {
+        source    = "template"
+        image_key = "ubuntu-24-04"
+        vm_id     = 200
+        cores     = 1
+        memory_mb = 1024 # 1GB ram
+        disk_gb   = 8
+        ip_addr   = "192.168.1.10/24"
+        # Budget additional RAM and verify ID/address availability before starting.
+        started = true
+        on_boot = true
       }
     }
     vms = {
@@ -63,7 +75,7 @@ locals {
         role      = "control-plane"
         vm_id     = 101
         cores     = 8
-        memory_mb = 14336 # 14GB ram
+        memory_mb = 13312 # 14GB ram
         disk_gb   = 100
         ip_addr   = "192.168.1.101/24"
       }

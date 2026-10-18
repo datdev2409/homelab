@@ -115,14 +115,25 @@ confirmation. Existing accounts receive the new password; new accounts receive
 a home directory and Bash shell. Each run sets the password using a fresh
 SHA-512 salt, so reruns report a password change even for the same input.
 Password tasks suppress logs and diffs.
+Pass `ADD_TO_SUDO=true` to also add the account to the Ubuntu `sudo` group:
+
+```sh
+make setup-users CLUSTER=001 ADD_TO_SUDO=true
+```
+
+The default, `ADD_TO_SUDO=false`, leaves existing group memberships unchanged;
+it does not revoke sudo access from an existing account. Other supplementary
+groups are preserved when adding `sudo`. For direct playbook runs, use
+`-e login_add_to_sudo=true` to enable this option.
+
 Separate SSH/Python and privilege checks run first with visible errors, so
 connection failures can be diagnosed without exposing the password.
 
 Hosts need Python 3 and working SSH access through their existing inventory
 users and key, with root or sudo privileges. Install `passlib` in the controller's
 Ansible Python environment for password hashing. SSH password login follows the
-host's existing sshd configuration; sudo access follows its existing account
-and sudoers configuration.
+host's existing sshd configuration; the `sudo` group uses the host's existing
+sudoers policy. This playbook does not configure passwordless sudo.
 
 To preview changes or target specific hosts, run from `ansible/`:
 

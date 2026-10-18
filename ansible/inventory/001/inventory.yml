@@ -6,6 +6,7 @@
     "system_containers":
       "hosts":
         "cloudflared": {}
+        "dns-server": {}
     "workers":
       "hosts": {}
   "hosts":
@@ -14,6 +15,9 @@
       "ansible_user": "root"
     "cp-01":
       "ansible_host": "192.168.1.101"
+    "dns-server":
+      "ansible_host": "192.168.1.10"
+      "ansible_user": "root"
   "vars":
     "ansible_python_interpreter": "/usr/bin/python3"
     "ansible_user": "ubuntu"

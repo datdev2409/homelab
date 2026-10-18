@@ -4,6 +4,8 @@
   become: true
   gather_facts: false
   any_errors_fatal: true
+  vars:
+    login_add_to_sudo: true
   vars_prompt:
     - name: login_username
       prompt: Username to create or update on every host
@@ -17,6 +19,12 @@
       unsafe: true
 
   pre_tasks:
+    - name: Require a boolean sudo membership flag
+      ansible.builtin.assert:
+        that:
+          - (login_add_to_sudo | string | lower) in ['true', 'false']
+        fail_msg: "Set login_add_to_sudo to true or false (ADD_TO_SUDO for make setup-users)."
+
     - name: Require a valid Linux username
       ansible.builtin.assert:
         that:
@@ -52,6 +60,8 @@
         state: present
         create_home: true
         shell: /bin/bash
+        groups: "{{ 'sudo' if (login_add_to_sudo | bool) else omit }}"
+        append: true
         password: "{{ login_password | password_hash('sha512') }}"
         password_lock: false
         update_password: always
