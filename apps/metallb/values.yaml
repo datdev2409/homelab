@@ -1,0 +1,25 @@
+# Layer 2 mode does not need FRR or router peering.
+speaker:
+  frr:
+    enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+frrk8s:
+  enabled: false
+
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+prometheus:
+  serviceMonitor:
+    enabled: false

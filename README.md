@@ -53,7 +53,8 @@ Child Applications include [Cloudflared](apps/cloudflared/README.md) and
 and [External Secrets Operator](apps/external-secrets/README.md) for external
 secret synchronization using AWS Systems Manager Parameter Store and OIDC (AWS trust setup
 remains separate);
-monitoring remains a placeholder. See the
+monitoring remains a placeholder. [MetalLB](apps/metallb/README.md) provides
+Layer 2 LAN LoadBalancer support once a reserved address pool is configured. See the
 [bootstrap module](infrastructure/root_modules/cluster-bootstrap/README.md).
 Ansible playbooks live only in `ansible/playbooks/` and import task files
 from `ansible/tasks/`.
