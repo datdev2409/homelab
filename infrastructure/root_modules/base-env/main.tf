@@ -1,10 +1,10 @@
 locals {
-  is_cloud_image = var.image.mode == "cloud_image"
-  media_id       = var.image.url != null ? proxmox_virtual_environment_download_file.media[0].id : proxmox_virtual_environment_file.media[0].id
+  is_cloud_image = var.image == null ? false : var.image.mode == "cloud_image"
+  media_id       = length(var.vms) == 0 || var.image == null ? null : var.image.url != null ? proxmox_virtual_environment_download_file.media[0].id : proxmox_virtual_environment_file.media[0].id
 }
 
 resource "proxmox_virtual_environment_download_file" "media" {
-  count              = var.image.url != null ? 1 : 0
+  count              = length(var.vms) > 0 && try(var.image.url != null, false) ? 1 : 0
   node_name          = var.proxmox_node
   datastore_id       = var.image.datastore_id
   content_type       = local.is_cloud_image ? "import" : "iso"
@@ -15,7 +15,7 @@ resource "proxmox_virtual_environment_download_file" "media" {
 }
 
 resource "proxmox_virtual_environment_file" "media" {
-  count        = var.image.local_path != null ? 1 : 0
+  count        = length(var.vms) > 0 && try(var.image.local_path != null, false) ? 1 : 0
   node_name    = var.proxmox_node
   datastore_id = var.image.datastore_id
   content_type = local.is_cloud_image ? "import" : "iso"

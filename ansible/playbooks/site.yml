@@ -1,6 +1,6 @@
 ---
 - name: Prepare all three Ubuntu VMs
-  hosts: all
+  hosts: control_plane:workers
   vars_files:
     - ../group_vars/all.yml
   become: true
@@ -12,7 +12,7 @@
         that:
           - groups.get('control_plane', []) | length == 1
           - groups.get('workers', []) | length == 2
-          - groups['all'] | length == 3
+          - (groups['control_plane'] + groups['workers']) | unique | length == 3
           - groups['control_plane'] | intersect(groups['workers']) | length == 0
         fail_msg: "Use inventory groups control_plane (one host) and workers (two hosts)."
       run_once: true

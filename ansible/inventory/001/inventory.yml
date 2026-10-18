@@ -3,17 +3,17 @@
     "control_plane":
       "hosts":
         "cp-01": {}
-    "workers":
+    "system_containers":
       "hosts":
-        "worker-01": {}
-        "worker-02": {}
+        "cloudflared": {}
+    "workers":
+      "hosts": {}
   "hosts":
+    "cloudflared":
+      "ansible_host": "192.168.1.100"
+      "ansible_user": "root"
     "cp-01":
-      "ansible_host": "192.168.1.201"
-    "worker-01":
-      "ansible_host": "192.168.1.202"
-    "worker-02":
-      "ansible_host": "192.168.1.203"
+      "ansible_host": "192.168.1.101"
   "vars":
     "ansible_python_interpreter": "/usr/bin/python3"
     "ansible_user": "ubuntu"
