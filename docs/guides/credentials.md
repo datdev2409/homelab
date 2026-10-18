@@ -58,7 +58,10 @@ does not already exist. Existing destination files are never overwritten.
 
 - At repository root, direnv loads global credentials and the default OpenTofu
   engine selection. It reads `.local/credentials/node_public_key.pub` if no key
-  is supplied. Ansible uses `.local/credentials/node_private_key.pem` when run
+  is supplied. Set `HOMELAB_SSH_PUBLIC_KEY_FILE` in the global dotenv file to
+  override that path. Direnv reads the file into `HOMELAB_SSH_PUBLIC_KEY`, which
+  Terragrunt passes as `ssh_public_key`; the input requires key contents.
+  Ansible uses `.local/credentials/node_private_key.pem` when run
   from `ansible/`, as documented in the base-env README. Both keys are excluded
   from Git; the private key remains owner-readable only.
 - Under `infrastructure/clusters/001/`, it loads global values and then `001/.env`.

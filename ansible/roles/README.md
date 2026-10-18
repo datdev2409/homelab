@@ -1,5 +1,6 @@
 # Reusable roles
 
-Existing configuration remains in `../tasks/` and `../playbooks/site.yml` during the
-structure migration. Extract those tasks into roles without changing cluster
-behavior when implementing the new lifecycle workflow.
+Configuration currently lives in `../tasks/` and `../playbooks/`.
+The single-node k3s entry point is `../playbooks/site.yml` (importing `k3s.yml`);
+the legacy three-node entry point is `kubeadm.yml`. Extract tasks into roles
+without changing cluster behavior when implementing the lifecycle workflow.

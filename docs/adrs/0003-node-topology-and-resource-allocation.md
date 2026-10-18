@@ -3,6 +3,8 @@
 - **Status:** Accepted
 - **Date:** 2026-10-10
 
+Cluster 001 is superseded by [ADR 0022](0022-single-node-k3s.md).
+
 ## Context
 
 [ADR 0001](0001-host-platform.md) selects Proxmox VE as the persistent host.

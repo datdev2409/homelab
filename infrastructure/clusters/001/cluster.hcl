@@ -2,8 +2,9 @@
 locals {
   cluster_id              = "001"
   guest_os                = "ubuntu-24.04"
-  kubernetes_distribution = "kubeadm"
+  kubernetes_distribution = "k3s"
   cluster_bootstrap = {
+    # https://artifacthub.io/packages/helm/argo/argo-cd
     argocd_chart_version = "10.10.2"
     argocd_namespace     = "argocd"
     argocd_release_name  = "argocd"

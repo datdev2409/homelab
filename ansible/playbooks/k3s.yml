@@ -1,0 +1,79 @@
+---
+- name: Bootstrap one Ubuntu VM as a k3s server and worker
+  hosts: control_plane
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  vars_files:
+    - ../group_vars/k3s.yml
+  pre_tasks:
+    - name: Require a single-node Kubernetes inventory
+      ansible.builtin.assert:
+        that:
+          - groups.get('control_plane', []) | length == 1
+          - groups.get('workers', []) | length == 0
+          - k3s_version is match('^v[0-9]+\.[0-9]+\.[0-9]+[+]k3s[0-9]+$')
+        fail_msg: "Use one control_plane host, no workers, and a pinned stable k3s version. System containers are ignored."
+      run_once: true
+
+    - name: Wait for SSH and Python
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Wait for cloud-init
+      ansible.builtin.command: cloud-init status --wait --format json
+      register: cloud_init_status
+      changed_when: false
+      failed_when: cloud_init_status.rc not in [0, 2]
+
+    - name: Require completed cloud-init with no errors except deprecations
+      ansible.builtin.assert:
+        that:
+          - cloud_init_report.status == 'done'
+          - cloud_init_report.errors | length == 0
+          - cloud_init_report.recoverable_errors.keys() | difference(['DEPRECATED']) | length == 0
+        fail_msg: "Cloud-init has unfinished work or errors beyond deprecation warnings. Run sudo cloud-init status --long on the VM."
+      vars:
+        cloud_init_report: "{{ cloud_init_status.stdout | from_json }}"
+      when: not ansible_check_mode
+
+    - name: Show cloud-init deprecation warnings
+      ansible.builtin.debug:
+        msg: "{{ (cloud_init_status.stdout | from_json).recoverable_errors }}"
+      when:
+        - not ansible_check_mode
+        - cloud_init_status.rc == 2
+
+    - name: Gather guest facts
+      ansible.builtin.setup:
+
+    - name: Require Ubuntu 24.04 amd64 with a stable LAN IPv4 address
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] == 'Ubuntu'
+          - ansible_facts['distribution_version'] == '24.04'
+          - ansible_facts['architecture'] == 'x86_64'
+          - ansible_host is match('^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+          - ansible_host in ansible_facts['all_ipv4_addresses']
+
+    - name: Validate non-overlapping node and cluster networks
+      ansible.builtin.command:
+        argv:
+          - python3
+          - -c
+          - "import ipaddress,sys; ip=ipaddress.ip_address(sys.argv[1]); pod=ipaddress.ip_network(sys.argv[2]); svc=ipaddress.ip_network(sys.argv[3]); sys.exit(0 if ip not in pod and ip not in svc and not pod.overlaps(svc) else 1)"
+          - "{{ ansible_host }}"
+          - "{{ k3s_pod_cidr }}"
+          - "{{ k3s_service_cidr }}"
+      changed_when: false
+
+  tasks:
+    - name: Install and configure k3s
+      ansible.builtin.import_tasks: ../tasks/k3s.yml
+
+  handlers:
+    - name: Restart k3s
+      ansible.builtin.systemd_service:
+        name: k3s
+        daemon_reload: true
+        state: restarted

@@ -179,8 +179,8 @@ This provisions the Ubuntu host only. Run `make setup-cloudflared CLUSTER=001`
 after starting it to install the connector and its systemd service through the
 [standalone Ansible playbook](../../../docs/guides/cloudflared-lxc.md). No Cloudflare credentials or tunnel tokens are passed through these
 inputs, and the existing Kubernetes HTTP connector is unchanged. Reserve host
-capacity before enabling `started`/`on_boot`; the three Kubernetes VMs already
-allocate 13 GiB of RAM.
+capacity before enabling `started`/`on_boot`; cluster 001 currently assigns
+14 GiB to its single Kubernetes VM (see ADR 0022).
 
 ## OCI-backed LXC application containers
 
@@ -236,7 +236,7 @@ required runtime values when overriding the image's environment. Do not commit
 credentials in these maps; runtime values can be retained in state.
 
 Containers default to stopped and do not start on host boot. Budget their RAM,
-CPU, and SSD space alongside the existing 13 GiB VM allocation before enabling
+CPU, and SSD space alongside the existing 14 GiB VM allocation before enabling
 them; OCI support does not expand the host capacity or the three-running-VM
 limit. Cluster 001 uses a system-template container, not an OCI application image.
 
@@ -248,7 +248,7 @@ Changing image/template settings can replace a container; always review the plan
 Application images need not provide SSH, Python, systemd, or a shell. They are
 excluded from the Kubernetes Ansible inventory and receive no cloud-init user
 or SSH key. Image build and application configuration remain separate work;
-this capability does not run the kubeadm playbooks inside LXC containers.
+this capability does not run Kubernetes bootstrap playbooks inside LXC containers.
 
 Run offline regression checks with mocked providers:
 

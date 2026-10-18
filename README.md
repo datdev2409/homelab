@@ -9,7 +9,7 @@ are recorded in [docs/adrs](docs/adrs).
 | --- | --- |
 | `apps/roots/<id>` | Root GitOps entry point containing child Applications |
 | `apps/<app>` | Reusable manifests and cluster overlays |
-| `ansible/playbooks`, `ansible/roles` | Ubuntu and kubeadm configuration |
+| `ansible/playbooks`, `ansible/roles` | Ubuntu and Kubernetes configuration |
 | `ansible/inventory/<id>` | Non-secret generated inventory and cluster variables |
 | `infrastructure/root_modules` | Reusable OpenTofu configurations |
 | `infrastructure/cloudflare` | Account-wide Cloudflare inputs and independent Terragrunt unit |
@@ -17,7 +17,7 @@ are recorded in [docs/adrs](docs/adrs).
 | `scripts/` | Ordered lifecycle orchestration |
 | `.local/config/<id>/kubeconfig.yaml` | Ignored per-cluster kubeconfig |
 
-Cluster `001` targets Ubuntu 24.04 and kubeadm. Talos cluster `002` is reserved
+Cluster `001` targets a single Ubuntu 24.04 VM running k3s (server and worker). Talos cluster `002` is reserved
 for a later implementation. Only three VMs should run at a time.
 
 State mirrors each Terragrunt unit under `.local/states/`, for example
@@ -60,7 +60,8 @@ from `ansible/tasks/`.
 The standalone Ubuntu LXC connector has a separate
 [Ansible playbook](docs/guides/cloudflared-lxc.md), run with
 `make setup-cloudflared CLUSTER=001` after provisioning and starting its guest.
-Full bootstrap and teardown scripts remain guarded until implemented.
+Run `make setup-k3s CLUSTER=001` after VM provisioning to install k3s and
+fetch its kubeconfig. Full bootstrap and teardown scripts remain guarded until implemented.
 
 ## Credentials
 

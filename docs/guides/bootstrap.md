@@ -24,9 +24,10 @@ Make provisioning targets select the correct cluster environment automatically.
 
 1. Apply `infrastructure/clusters/001/base-env` for a fresh deployment.
 2. Verify OpenTofu created `ansible/inventory/001/inventory.yml` during apply.
-3. Run `ansible/playbooks/site.yml`, explicitly loading inventory, shared vars,
-   cluster vars, and SSH credentials. Verify all expected nodes, CoreDNS, and CNI.
-4. Run `ansible/playbooks/get-kubeconfig.yml`. The selected inventory directory
+3. Run `make setup-k3s CLUSTER=001` to bootstrap the single k3s node and fetch
+   its kubeconfig. This uses the generated inventory, shared SSH key, and pinned
+   `ansible/group_vars/k3s.yml` settings. Verify the node, CoreDNS, and storage.
+4. To refresh the kubeconfig later, run `ansible/playbooks/get-kubeconfig.yml`. The selected inventory directory
    determines the cluster ID and repository root; the default destination is
    `.local/config/<cluster-id>/kubeconfig.yaml`. The playbook sets directory mode
    0700 and file mode 0600.
@@ -50,11 +51,60 @@ From `ansible/`, retrieve the kubeconfig for cluster 001 with:
 ansible-playbook -i inventory/001/inventory.yml playbooks/get-kubeconfig.yml
 ```
 
-For another kubeadm cluster, select its `inventory/<id>/inventory.yml`; the same
+For another k3s cluster, select its `inventory/<id>/inventory.yml`; the same
 playbook writes `.local/config/<id>/kubeconfig.yaml` automatically. You can also
 pass `-e cluster_id=002` to explicitly set the destination ID. Always select the
 matching inventory to fetch from the correct cluster. Cluster 002's planned
 Talos provisioning and kubeconfig retrieval remain unimplemented.
+
+## Single-node k3s bootstrap
+
+After provisioning the Ubuntu VM, run from the repository root:
+
+```sh
+make setup-k3s CLUSTER=001
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml get nodes
+```
+
+The inventory must contain exactly one `control_plane` host and no workers.
+`cp-01` at `192.168.1.101` runs both the server and workloads. The standalone
+`cloudflared` system container is excluded. The playbook requires Ubuntu 24.04
+amd64, working SSH/Python and passwordless sudo; for a sudo password, run from
+`ansible/` with `--ask-become-pass`:
+
+```sh
+ansible-playbook -i inventory/001/inventory.yml playbooks/site.yml --ask-become-pass
+```
+
+`site.yml` runs `k3s.yml`, then `get-kubeconfig.yml`. The server uses a
+checksum-verified release binary, bundled containerd, Flannel, CoreDNS, metrics
+server, local-path storage, and the default single-server SQLite datastore.
+The release and CIDRs are pinned in `ansible/group_vars/k3s.yml`; check those
+networks against your LAN/VPN routes before running. Traefik and ServiceLB are
+disabled because Argo CD owns ingress and Cloudflare Tunnel supplies access.
+Allow TCP 6443 from the workstation to the VM; the VM needs internet access for
+APT, GitHub release downloads, and container images.
+
+Cloud-init must finish before installation. Deprecation-only warnings (such as
+the generated `user` string warning) are shown and accepted; other cloud-init
+errors stop bootstrap.
+
+Reruns preserve cluster data and only restart k3s when managed files change.
+The playbook refuses kubeadm nodes, k3s agents, unmanaged k3s data directories,
+and installed k3s versions that differ from the pin. Use a fresh VM for a move
+from kubeadm; migration, reset, and upgrades are separate procedures. The old
+three-node playbook is retained as `playbooks/kubeadm.yml`; its kubeconfig can
+be fetched with `-e remote_kubeconfig=/etc/kubernetes/admin.conf`.
+
+The fetched kubeconfig uses the inventory IP instead of loopback and is written
+privately (directory 0700, file 0600). Refresh it after certificate renewal.
+Local-path volumes and SQLite live on the VM disk; recreating the VM loses them
+unless separately backed up. This topology has no node failover.
+
+Syntax checks are supported without contacting guests. Ansible `--check` cannot
+prove first-install readiness because the service and generated kubeconfig do
+not yet exist. `make bootstrap` still stops at its lifecycle guard; use the
+separate provisioning, k3s, and Argo CD targets in order.
 
 ## Login username and password
 
@@ -100,7 +150,7 @@ playbook run; connection failures require working provisioning credentials first
 
 After provisioning and starting the Ubuntu LXC, run
 `make setup-cloudflared CLUSTER=001` to install its standalone connector. This is
-independent of kubeadm and the Kubernetes HTTP connector. The playbook uses the
+independent of k3s and the Kubernetes HTTP connector. The playbook uses the
 generated inventory and the private `CLOUDFLARED_TUNNEL_TOKEN` environment value.
 See the [standalone connector guide](cloudflared-lxc.md) for prerequisites,
 rotation, version pinning, and verification.
@@ -120,5 +170,5 @@ unexpected deletion or replacement before apply. Active state was not modified
 by repository cleanup.
 
 For reruns, verify the same cluster ID and state are selected. If VMs are partly
-replaced, assess node membership before rerunning kubeadm. Recovery and partial
+replaced, assess node membership before rerunning bootstrap. Recovery and partial
 replacement commands must be documented during implementation.

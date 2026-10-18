@@ -1,0 +1,133 @@
+---
+- name: Check for existing cluster installations
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - /etc/kubernetes/kubelet.conf
+    - /etc/kubernetes/admin.conf
+    - /etc/systemd/system/k3s-agent.service
+    - /var/lib/rancher/k3s
+    - /etc/rancher/k3s/.homelab-managed
+    - /usr/local/bin/k3s
+  register: k3s_existing
+
+- name: Refuse to overwrite kubeadm, an agent, or an unmanaged k3s cluster
+  ansible.builtin.assert:
+    that:
+      - not k3s_existing.results[0].stat.exists
+      - not k3s_existing.results[1].stat.exists
+      - not k3s_existing.results[2].stat.exists
+      - not k3s_existing.results[3].stat.exists or k3s_existing.results[4].stat.exists
+    fail_msg: "Use a fresh Ubuntu VM or this playbook's existing k3s installation. Migration/reset is a separate operation."
+
+- name: Read installed k3s version
+  ansible.builtin.command: /usr/local/bin/k3s --version
+  register: k3s_installed
+  changed_when: false
+  check_mode: false
+  when: k3s_existing.results[5].stat.exists
+
+- name: Refuse implicit k3s upgrades or downgrades
+  ansible.builtin.assert:
+    that: k3s_installed.stdout.split()[2] == k3s_version
+    fail_msg: "Installed k3s differs from k3s_version. Use a separate, backed-up upgrade procedure."
+  when: k3s_existing.results[5].stat.exists
+
+- name: Prepare Linux networking and swap
+  ansible.builtin.import_tasks: prepare.yml
+
+- name: Install the checksum-verified pinned k3s binary
+  ansible.builtin.get_url:
+    url: "{{ k3s_release_url }}/k3s"
+    checksum: "sha256:{{ k3s_release_url }}/sha256sum-amd64.txt"
+    dest: /usr/local/bin/k3s
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart k3s
+
+- name: Create private k3s configuration directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Configure the single schedulable server
+  ansible.builtin.template:
+    src: ../templates/k3s-config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart k3s
+
+- name: Install k3s systemd service
+  ansible.builtin.template:
+    src: ../templates/k3s.service.j2
+    dest: /etc/systemd/system/k3s.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart k3s
+
+- name: Record bootstrap ownership before starting the server
+  ansible.builtin.copy:
+    dest: /etc/rancher/k3s/.homelab-managed
+    content: "Managed by homelab Ansible k3s bootstrap.\n"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Apply pending k3s restart
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start k3s
+  ansible.builtin.systemd_service:
+    name: k3s
+    daemon_reload: true
+    enabled: true
+    state: started
+
+- name: Verify cluster readiness
+  when: not ansible_check_mode
+  block:
+    - name: Wait for API readiness
+      ansible.builtin.command: /usr/local/bin/k3s kubectl get --raw=/readyz
+      changed_when: false
+      register: k3s_api_ready
+      until: k3s_api_ready.rc == 0
+      retries: 60
+      delay: 5
+
+    - name: Wait for the single node and bundled Flannel to become Ready
+      ansible.builtin.command:
+        argv:
+          - /usr/local/bin/k3s
+          - kubectl
+          - wait
+          - --for=condition=Ready
+          - "node/{{ inventory_hostname }}"
+          - --timeout=300s
+      changed_when: false
+      register: k3s_node_ready
+      until: k3s_node_ready.rc == 0
+      retries: 30
+      delay: 5
+
+    - name: Wait for CoreDNS
+      ansible.builtin.command: /usr/local/bin/k3s kubectl -n kube-system rollout status deployment/coredns --timeout=300s
+      changed_when: false
+      register: k3s_dns_ready
+      until: k3s_dns_ready.rc == 0
+      retries: 30
+      delay: 5
+
+    - name: Wait for local path storage provisioner
+      ansible.builtin.command: /usr/local/bin/k3s kubectl -n kube-system rollout status deployment/local-path-provisioner --timeout=300s
+      changed_when: false
+      register: k3s_storage_ready
+      until: k3s_storage_ready.rc == 0
+      retries: 30
+      delay: 5

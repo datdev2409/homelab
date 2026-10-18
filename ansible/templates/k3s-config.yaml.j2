@@ -1,0 +1,13 @@
+# Managed by Ansible. The server also runs workloads; no control-plane taint.
+node-name: {{ inventory_hostname | to_json }}
+node-ip: {{ ansible_host | to_json }}
+advertise-address: {{ ansible_host | to_json }}
+tls-san:
+  - {{ ansible_host | to_json }}
+write-kubeconfig-mode: "0600"
+cluster-cidr: {{ k3s_pod_cidr | to_json }}
+service-cidr: {{ k3s_service_cidr | to_json }}
+# Argo CD owns Traefik; Cloudflare Tunnel supplies external access.
+disable:
+  - traefik
+  - servicelb

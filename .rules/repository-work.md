@@ -6,7 +6,7 @@
   Record accepted decisions in numbered Markdown ADRs and link amendments or
   superseded decisions. Keep implementation and operational guides consistent.
 - Keep one owner per resource: OpenTofu for VMs and Argo CD bootstrap, Ansible
-  for OS/kubeadm/Flannel, and Argo CD for child Applications and workloads.
+  for OS and Kubernetes bootstrap (k3s for cluster 001), and Argo CD for child Applications and workloads.
 - Preserve user changes and migrated state. Do not reintroduce the removed legacy
   stack or create a second state owner for the same VMs. Keep existing migration
   blocks and temporary storage settings unless the task involves changing them.

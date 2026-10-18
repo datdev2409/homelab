@@ -1,7 +1,7 @@
 CLUSTER ?= 001
 export TG_TF_PATH ?= tofu
 
-.PHONY: bootstrap teardown fmt-terragrunt plan-base-env apply-base-env plan-cluster-bootstrap apply-cluster-bootstrap plan-cloudflare apply-cloudflare port-forward-argocd generate-seal-secret setup-cloudflared setup-users
+.PHONY: bootstrap teardown fmt-terragrunt plan-base-env apply-base-env plan-cluster-bootstrap apply-cluster-bootstrap plan-cloudflare apply-cloudflare port-forward-argocd generate-seal-secret setup-cloudflared setup-users setup-k3s
 bootstrap:
 	@./scripts/bootstrap.sh "$(CLUSTER)"
 
@@ -50,3 +50,8 @@ setup-cloudflared:
 setup-users:
 	@test -f "ansible/inventory/$(CLUSTER)/inventory.yml" || { echo "Apply base-env first to generate ansible/inventory/$(CLUSTER)/inventory.yml" >&2; exit 1; }
 	@cd ansible && ansible-playbook -i "inventory/$(CLUSTER)/inventory.yml" playbooks/setup-users.yml
+
+# Bootstrap only Kubernetes on the provisioned VM, then fetch its kubeconfig.
+setup-k3s:
+	@test -f "ansible/inventory/$(CLUSTER)/inventory.yml" || { echo "Apply base-env first to generate ansible/inventory/$(CLUSTER)/inventory.yml" >&2; exit 1; }
+	@cd ansible && ansible-playbook -i "inventory/$(CLUSTER)/inventory.yml" playbooks/site.yml
