@@ -27,6 +27,16 @@ match the intended Ingress hostname. Configure Cloudflare Access for private
 applications. Tunnel hostname routes are managed separately from this chart.
 Ingress status may have no external address with this ClusterIP setup.
 
+The additional `traefik-nodeport-svc` Service in `extra/service.yaml` has type
+`LoadBalancer` and requests an address from MetalLB's `lan` pool
+(`192.168.1.30–192.168.1.50`). Its existing name and NodePorts 30080/30443 are
+retained for compatibility. LAN clients use its external IP on ports 80/443;
+map application hostnames to that IP in local DNS. Find the assigned address:
+
+```sh
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n traefik get svc traefik-nodeport-svc
+```
+
 Create workload Ingress resources alongside their applications, for example:
 
 ```yaml

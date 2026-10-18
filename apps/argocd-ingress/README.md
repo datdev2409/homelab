@@ -8,11 +8,17 @@ Cert-manager issues and renews the server certificate through the shared
 cannot use the public `letsencrypt-prod` issuer.
 
 The hostname is intentionally `argocd.home.apra`, matching the requested name.
-Configure local DNS or a hosts-file entry mapping it to `192.168.1.101`.
-With the current Traefik NodePort Service, open:
+Configure local DNS or a hosts-file entry mapping it to Traefik's MetalLB IP.
+Find the allocated address with:
+
+```sh
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n traefik get svc traefik-nodeport-svc
+```
+
+Open:
 
 ```text
-https://argocd.home.apra:30443
+https://argocd.home.apra
 ```
 
 The route accepts HTTPS on Traefik's `websecure` entrypoint only; port 30080
@@ -49,7 +55,8 @@ trusted root certificate store:
 
 ```sh
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n cert-manager get secret home-apra-root-ca -o jsonpath='{.data.tls\.crt}' | base64 --decode > /tmp/home-apra-root-ca.crt
-curl --cacert /tmp/home-apra-root-ca.crt --resolve argocd.home.apra:30443:192.168.1.101 https://argocd.home.apra:30443/
+TRAEFIK_LB_IP=$(kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n traefik get svc traefik-nodeport-svc -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+curl --cacert /tmp/home-apra-root-ca.crt --resolve "argocd.home.apra:443:${TRAEFIK_LB_IP}" https://argocd.home.apra/
 ```
 
 Do not export or commit the CA private key. Back up the CA Secret securely;

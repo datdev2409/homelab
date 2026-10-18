@@ -18,10 +18,10 @@ and its L2Advertisement, deployed by the child Application's third source.
 Both use sync wave 1 so the chart's controller and webhook start first.
 LoadBalancer Services automatically receive an address from this pool.
 
-Existing Traefik ClusterIP and NodePort Services remain unchanged. After a
-pool is configured, change the chart-owned Traefik Service to `LoadBalancer`
-through `apps/traefik/override/001/values.yaml` to use a LAN IP on ports 80/443.
-Update local DNS to that IP; keep Cloudflare Tunnel's ClusterIP origin.
+Traefik's additional `traefik-nodeport-svc` Service uses type `LoadBalancer`
+and selects the `lan` pool. It exposes its allocated LAN IP on ports 80/443
+and retains NodePorts 30080/30443. Update local DNS to the allocated IP;
+Cloudflare Tunnel continues to use the chart-owned ClusterIP Service.
 
 ## Validation and deployment
 
