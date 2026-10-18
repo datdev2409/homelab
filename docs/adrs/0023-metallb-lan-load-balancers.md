@@ -16,6 +16,8 @@ owns MetalLB, its CRDs, and subsequent address pools and advertisements.
 Install the controller and speaker independently of pool configuration; add
 only addresses confirmed reserved outside DHCP and other static assignments.
 Keep cluster-specific address pools under `apps/metallb/override/001/`.
+Cluster 001 uses the user-selected inclusive range 192.168.1.30–192.168.1.50;
+keep these addresses reserved outside DHCP and other static assignments.
 
 MetalLB provides an optional LAN exposure mechanism for LoadBalancer Services,
 including Traefik. Cloudflare Tunnel remains available. Installing MetalLB

@@ -11,11 +11,12 @@ uses host networking, so the namespace has privileged Pod Security labels.
 
 ## Address allocation
 
-No address pool is configured yet. Before adding an `IPAddressPool` and
-`L2Advertisement`, reserve unused addresses on 192.168.1.0/24 outside DHCP and
-all other static assignments. Put cluster-specific configuration under
-`override/001/` and add it as a manifest source in the child Application.
-An installation without a pool is idle and does not advertise LAN addresses.
+Cluster 001's `lan` IPAddressPool allocates **192.168.1.30–192.168.1.50**
+(21 addresses). Keep this user-selected range reserved outside DHCP and other
+static assignments. `override/001/extra/address-pool.yaml` defines the pool
+and its L2Advertisement, deployed by the child Application's third source.
+Both use sync wave 1 so the chart's controller and webhook start first.
+LoadBalancer Services automatically receive an address from this pool.
 
 Existing Traefik ClusterIP and NodePort Services remain unchanged. After a
 pool is configured, change the chart-owned Traefik Service to `LoadBalancer`
@@ -39,6 +40,7 @@ kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n argocd get application
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n metallb-system rollout status deployment/metallb-controller
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n metallb-system rollout status daemonset/metallb-speaker
 kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n metallb-system get pods
+kubectl --kubeconfig .local/config/001/kubeconfig.yaml -n metallb-system get ipaddresspools,l2advertisements
 ```
 
 Deleting the child Application cascades to its resources and interrupts all

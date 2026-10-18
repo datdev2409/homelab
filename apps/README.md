@@ -18,7 +18,7 @@ Cloudflare Tunnel can use as an origin. Workload Ingress resources explicitly
 select class `traefik`.
 
 [MetalLB](metallb/README.md) provides LAN LoadBalancer support in Layer 2 mode.
-Address allocation requires a separately confirmed pool outside DHCP.
+Cluster 001 uses the reserved pool `192.168.1.30–192.168.1.50` outside DHCP.
 
 [Sealed Secrets](sealed-secrets/README.md) installs the controller for encrypted
 GitOps credentials. Generate SealedSecrets with the target cluster's public
