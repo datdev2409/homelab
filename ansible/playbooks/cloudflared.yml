@@ -1,0 +1,97 @@
+---
+- name: Validate the standalone connector inputs
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  any_errors_fatal: true
+  vars_files:
+    - ../group_vars/cloudflared.yml
+  tasks:
+    - name: Require the generated cloudflared system-container host
+      ansible.builtin.assert:
+        that:
+          - "'cloudflared' in groups.get('system_containers', [])"
+        fail_msg: "Apply base-env first and select its generated inventory containing cloudflared in system_containers."
+
+    - name: Require a connector token from the private environment
+      ansible.builtin.assert:
+        that:
+          - cloudflared_tunnel_token | length > 0
+        fail_msg: "Set CLOUDFLARED_TUNNEL_TOKEN to the homelab-warp connector token in the selected cluster's private environment."
+      no_log: true
+
+- name: Install and bootstrap the standalone Cloudflare connector
+  hosts: system_containers:&cloudflared
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  vars_files:
+    - ../group_vars/cloudflared.yml
+  pre_tasks:
+    # Recheck here so --limit cloudflared cannot bypass the secret preflight.
+    - name: Require the connector token before making remote changes
+      ansible.builtin.assert:
+        that:
+          - cloudflared_tunnel_token | length > 0
+      no_log: true
+
+    - name: Wait for the running container's SSH port
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: "{{ ansible_port | default(22) }}"
+        timeout: 300
+      delegate_to: localhost
+      become: false
+      vars:
+        ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+    - name: Inspect the OS before bootstrapping Python
+      ansible.builtin.raw: |
+        . /etc/os-release
+        test "$ID" = ubuntu && test "$VERSION_ID" = 24.04
+      changed_when: false
+      check_mode: false
+
+    - name: Check whether the container has Python
+      ansible.builtin.raw: test -x /usr/bin/python3
+      register: cloudflared_python
+      changed_when: false
+      failed_when: cloudflared_python.rc not in [0, 1]
+      check_mode: false
+
+    - name: Require existing Python for check mode
+      ansible.builtin.assert:
+        that:
+          - not ansible_check_mode or cloudflared_python.rc == 0
+        fail_msg: "The first normal run installs Python. Check mode cannot inspect a container without Python."
+
+    - name: Bootstrap Python when absent
+      ansible.builtin.raw: |
+        apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-apt
+      when: cloudflared_python.rc != 0
+      changed_when: true
+
+    - name: Gather container facts
+      ansible.builtin.setup:
+
+    - name: Require the supported platform and a pinned binary digest
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] == 'Ubuntu'
+          - ansible_facts['distribution_version'] == '24.04'
+          - ansible_facts['architecture'] == 'x86_64'
+          - ansible_facts['service_mgr'] == 'systemd'
+          - cloudflared_version is match('^[0-9]+\.[0-9]+\.[0-9]+$')
+          - cloudflared_binary_sha256 is match('^[a-f0-9]{64}$')
+        fail_msg: "This playbook requires Ubuntu 24.04 amd64 with systemd and a pinned cloudflared version/SHA256."
+
+  tasks:
+    - name: Install cloudflared and configure its service
+      ansible.builtin.import_tasks: ../tasks/cloudflared.yml
+
+  handlers:
+    - name: Restart cloudflared
+      ansible.builtin.systemd_service:
+        name: cloudflared
+        daemon_reload: true
+        state: restarted

@@ -56,6 +56,15 @@ pass `-e cluster_id=002` to explicitly set the destination ID. Always select the
 matching inventory to fetch from the correct cluster. Cluster 002's planned
 Talos provisioning and kubeconfig retrieval remain unimplemented.
 
+## Standalone cloudflared LXC
+
+After provisioning and starting the Ubuntu LXC, run
+`make setup-cloudflared CLUSTER=001` to install its standalone connector. This is
+independent of kubeadm and the Kubernetes HTTP connector. The playbook uses the
+generated inventory and the private `CLOUDFLARED_TUNNEL_TOKEN` environment value.
+See the [standalone connector guide](cloudflared-lxc.md) for prerequisites,
+rotation, version pinning, and verification.
+
 ## Existing cluster 001
 
 The user migrated cluster 001 state to the new Terragrunt unit. The legacy

@@ -23,6 +23,13 @@ Global values load first; cluster values override matching variables. Leaving a
 variable unset in the cluster file retains its global value. Empty assignments
 override a global value with an empty value, so leave unused settings commented.
 
+The standalone Ubuntu LXC connector uses `CLOUDFLARED_TUNNEL_TOKEN` from the
+selected cluster's `.local/credentials/<id>/.env`. Supply the `homelab-warp`
+connector token, not the HTTP connector token or account API token.
+`make setup-cloudflared CLUSTER=001` loads it through direnv; Ansible writes a
+protected token file without logging or diffing the value. See the
+[standalone connector guide](cloudflared-lxc.md).
+
 ## One-time setup
 
 Install direnv, then add this hook to your zsh configuration and reload the shell:

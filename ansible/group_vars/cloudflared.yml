@@ -1,0 +1,7 @@
+---
+# Update version and checksum together. Digest is from the official GitHub release:
+# https://api.github.com/repos/cloudflare/cloudflared/releases/tags/2026.10.1
+# Checksum use cloudflared-linux-amd64
+cloudflared_version: "2026.10.1"
+cloudflared_binary_sha256: "3bfc539f45d2620c71debb7a86be0efa737ed5ccbad9eb85c787116900e5c586"
+cloudflared_tunnel_token: "{{ lookup('ansible.builtin.env', 'CLOUDFLARED_TUNNEL_TOKEN') | trim }}"

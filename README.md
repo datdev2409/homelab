@@ -57,6 +57,9 @@ monitoring remains a placeholder. See the
 [bootstrap module](infrastructure/root_modules/cluster-bootstrap/README.md).
 Ansible playbooks live only in `ansible/playbooks/` and import task files
 from `ansible/tasks/`.
+The standalone Ubuntu LXC connector has a separate
+[Ansible playbook](docs/guides/cloudflared-lxc.md), run with
+`make setup-cloudflared CLUSTER=001` after provisioning and starting its guest.
 Full bootstrap and teardown scripts remain guarded until implemented.
 
 ## Credentials

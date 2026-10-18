@@ -1,0 +1,16 @@
+# Managed by Ansible. The tunnel token is stored separately with mode 0600.
+[Unit]
+Description=Cloudflare Tunnel connector
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate --metrics 127.0.0.1:2000 run --token-file /etc/cloudflared/tunnel-token
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=45s
+
+[Install]
+WantedBy=multi-user.target

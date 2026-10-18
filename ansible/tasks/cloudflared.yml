@@ -1,0 +1,68 @@
+---
+- name: Install HTTPS download prerequisites
+  ansible.builtin.apt:
+    name: ca-certificates
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install the checksum-verified cloudflared binary
+  ansible.builtin.get_url:
+    url: "https://github.com/cloudflare/cloudflared/releases/download/{{ cloudflared_version }}/cloudflared-linux-amd64"
+    dest: /usr/local/bin/cloudflared
+    checksum: "sha256:{{ cloudflared_binary_sha256 }}"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart cloudflared
+
+- name: Create the private connector configuration directory
+  ansible.builtin.file:
+    path: /etc/cloudflared
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Install the connector token without logging its value
+  ansible.builtin.copy:
+    content: "{{ cloudflared_tunnel_token }}"
+    dest: /etc/cloudflared/tunnel-token
+    owner: root
+    group: root
+    mode: "0600"
+    backup: false
+  no_log: true
+  diff: false
+  notify: Restart cloudflared
+
+- name: Install the cloudflared systemd unit
+  ansible.builtin.template:
+    src: ../templates/cloudflared.service.j2
+    dest: /etc/systemd/system/cloudflared.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart cloudflared
+
+- name: Apply binary, token, and service changes before checking readiness
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable cloudflared and keep it running
+  ansible.builtin.systemd_service:
+    name: cloudflared
+    daemon_reload: true
+    enabled: true
+    state: started
+
+- name: Wait for an active connection to Cloudflare
+  ansible.builtin.uri:
+    url: http://127.0.0.1:2000/ready
+    status_code: 200
+    return_content: false
+    use_proxy: false
+  register: cloudflared_ready
+  until: cloudflared_ready.status | default(0) == 200
+  retries: 30
+  delay: 5
+  when: not ansible_check_mode

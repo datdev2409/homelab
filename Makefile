@@ -1,7 +1,7 @@
 CLUSTER ?= 001
 export TG_TF_PATH ?= tofu
 
-.PHONY: bootstrap teardown fmt-terragrunt plan-base-env apply-base-env plan-cluster-bootstrap apply-cluster-bootstrap plan-cloudflare apply-cloudflare port-forward-argocd generate-seal-secret
+.PHONY: bootstrap teardown fmt-terragrunt plan-base-env apply-base-env plan-cluster-bootstrap apply-cluster-bootstrap plan-cloudflare apply-cloudflare port-forward-argocd generate-seal-secret setup-cloudflared
 bootstrap:
 	@./scripts/bootstrap.sh "$(CLUSTER)"
 
@@ -40,3 +40,8 @@ port-forward-argocd:
 # Prompt for the Secret name, namespace, and .env path; write encrypted YAML.
 generate-seal-secret:
 	@bash ./scripts/generate-seal-secret.sh "$(CLUSTER)"
+
+# Standalone Ubuntu LXC connector; use the selected cluster's private token.
+setup-cloudflared:
+	@test -f "ansible/inventory/$(CLUSTER)/inventory.yml" || { echo "Apply base-env first to generate ansible/inventory/$(CLUSTER)/inventory.yml" >&2; exit 1; }
+	@cd ansible && direnv exec "../infrastructure/clusters/$(CLUSTER)" sh -c ': "$${CLOUDFLARED_TUNNEL_TOKEN:?Set CLOUDFLARED_TUNNEL_TOKEN in the selected cluster private environment}"; exec ansible-playbook -i "inventory/$$1/inventory.yml" playbooks/cloudflared.yml' sh "$(CLUSTER)"
