@@ -10,6 +10,11 @@ Cloudflare manages the tunnel, hostname routes, DNS, and Access policies
 separately. This application does not create Cloudflare resources or publish
 a workload by itself.
 
+The account-level [OpenTofu module](../../infrastructure/root_modules/cloudflare/README.md)
+can adopt the Cloudflare tunnel, DNS, and hostname configuration. Adoption is
+pending; the existing connector and SSM/ESO token delivery remain Argo CD-owned.
+Do not change the tunnel ID/token while importing its Cloudflare resources.
+
 ## Layout
 
 ```text

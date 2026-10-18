@@ -12,6 +12,7 @@ are recorded in [docs/adrs](docs/adrs).
 | `ansible/playbooks`, `ansible/roles` | Ubuntu and kubeadm configuration |
 | `ansible/inventory/<id>` | Non-secret generated inventory and cluster variables |
 | `infrastructure/root_modules` | Reusable OpenTofu configurations |
+| `infrastructure/cloudflare` | Account-wide Cloudflare inputs and independent Terragrunt unit |
 | `infrastructure/clusters/<id>` | Terragrunt configuration per cluster and stage |
 | `scripts/` | Ordered lifecycle orchestration |
 | `.local/config/<id>/kubeconfig.yaml` | Ignored per-cluster kubeconfig |
@@ -59,6 +60,13 @@ from `ansible/tasks/`.
 Full bootstrap and teardown scripts remain guarded until implemented.
 
 ## Credentials
+
+The [Cloudflare module](infrastructure/root_modules/cloudflare/README.md) supports
+the `datnguyen.me` zone, Zero Trust settings, and HTTP/private-network tunnels in
+one account-level state at `.local/states/cloudflare/terraform.tfstate`.
+Its account resources have not been imported or deployed. Inventory and adopt
+existing resources before using `make plan-cloudflare` / `make apply-cloudflare`.
+It is independent of cluster lifecycle; connector provisioning remains separate.
 
 Use direnv to load shared credentials from `.local/credentials/.env` and cluster
 secrets from `.local/credentials/<id>/.env`. Cluster values override global ones.

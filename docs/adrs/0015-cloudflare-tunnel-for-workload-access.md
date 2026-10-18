@@ -2,6 +2,8 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-11
+- **Amended by:** [ADR 0019](0019-cloudflare-account-resources-with-opentofu.md),
+  adding a separate account-level OpenTofu unit for Cloudflare resource adoption.
 
 ## Decision
 
@@ -18,7 +20,9 @@ chart name, version, values revision, and destination namespace are configured
 directly in one Application. No generator or config file is needed. Argo CD owns the
 connector, ServiceAccount, and disruption budget. Configure Cloudflare tunnels, published
 hostnames, DNS, and Access policies separately in the Cloudflare dashboard.
-Future OpenTofu ownership of Cloudflare resources requires a separate unit.
+[ADR 0019](0019-cloudflare-account-resources-with-opentofu.md) provides a separate
+account-level OpenTofu unit for adopting Cloudflare resources. Until imports and
+adoption are complete, the existing resources remain managed separately.
 
 Start with explicit hostname routes to Kubernetes ClusterIP Services. An
 ingress controller is optional; [ADR 0016](0016-traefik-ingress-controller.md)

@@ -11,6 +11,13 @@ Global and cluster-specific dotenv files live outside Git:
 └── 002/.env          # Reserved secrets for future cluster 002
 ```
 
+The account-wide [Cloudflare unit](../../infrastructure/root_modules/cloudflare/README.md)
+uses global `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` assignments in
+`.local/credentials/.env`. The API provider reads the token from the environment;
+do not put it in HCL or command arguments. Keep connector tunnel tokens separate
+from this account API token. Cloudflare Make targets load the repository's global
+environment and do not select a Kubernetes cluster credential scope.
+
 Use dotenv assignments, such as `PROXMOX_VE_API_TOKEN='user@realm!name=secret'`.
 Global values load first; cluster values override matching variables. Leaving a
 variable unset in the cluster file retains its global value. Empty assignments

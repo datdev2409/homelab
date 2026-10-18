@@ -1,7 +1,7 @@
 CLUSTER ?= 001
 export TG_TF_PATH ?= tofu
 
-.PHONY: bootstrap teardown fmt-terragrunt plan-base-env apply-base-env plan-cluster-bootstrap apply-cluster-bootstrap port-forward-argocd generate-seal-secret
+.PHONY: bootstrap teardown fmt-terragrunt plan-base-env apply-base-env plan-cluster-bootstrap apply-cluster-bootstrap plan-cloudflare apply-cloudflare port-forward-argocd generate-seal-secret
 bootstrap:
 	@./scripts/bootstrap.sh "$(CLUSTER)"
 
@@ -25,6 +25,13 @@ plan-cluster-bootstrap:
 
 apply-cluster-bootstrap:
 	@cd "infrastructure/clusters/$(CLUSTER)/cluster-bootstrap" && direnv exec .. terragrunt apply
+
+# Account-wide Cloudflare resources use global credentials and their own state.
+plan-cloudflare:
+	@cd infrastructure/cloudflare && direnv exec ../.. sh -c ': "$${CLOUDFLARE_API_TOKEN:?Set CLOUDFLARE_API_TOKEN in .local/credentials/.env}"; exec terragrunt plan'
+
+apply-cloudflare:
+	@cd infrastructure/cloudflare && direnv exec ../.. sh -c ': "$${CLOUDFLARE_API_TOKEN:?Set CLOUDFLARE_API_TOKEN in .local/credentials/.env}"; exec terragrunt apply'
 
 # Open https://localhost:8080; stop the port-forward with Ctrl-C.
 port-forward-argocd:
