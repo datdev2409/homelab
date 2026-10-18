@@ -18,7 +18,8 @@ Server-side apply handles the large CRDs. ESO owns Secrets generated from
 ExternalSecrets. The separate Git source deploys an AWS Systems Manager
 ClusterSecretStore and dedicated OIDC service account from `extra/`.
 See the [store and AWS trust setup](extra/README.md). Consumer ExternalSecrets
-are defined with their applications.
+are defined with their applications. The store is restricted to the `cloudflare`
+namespace.
 Keep plaintext credentials outside Git.
 
 Existing Sealed Secrets resources retain their current owner. Do not let ESO

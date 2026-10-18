@@ -25,11 +25,11 @@ must trust this service account's subject and the `sts.amazonaws.com` audience.
 Issuer publication and AWS IAM configuration are prerequisites outside this
 Application; their readiness has not been verified.
 
-The shared store is available to consumers across namespaces. Its IAM policy
-must scope access to intended parameters. Keep ExternalSecrets with their
-consuming application's cluster-specific manifests. The Cloudflared consumer
-reads SSM parameter `/homelab/cloudflared-tunnel-token` into its Kubernetes
-Secret.
+Restrict the ClusterSecretStore to namespace `cloudflare` using its namespace
+conditions. Scope the IAM policy to intended parameters. Keep ExternalSecrets
+with their consuming application's cluster-specific manifests. The Cloudflared
+consumer reads SSM parameter `/homelab/cloudflared-tunnel-token` into its
+Kubernetes Secret.
 Store plaintext credentials outside Git.
 
 This complements [ADR 0017](0017-sealed-secrets.md). Existing Sealed Secrets

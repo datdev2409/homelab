@@ -50,9 +50,11 @@ The exact provider ARN and trust condition keys depend on the cluster's issuer
 URL. Use the issuer host and path without `https://` for the condition key
 prefix. The issuer must match the Kubernetes service account tokens.
 
-This ClusterSecretStore can be referenced from any workload namespace.
-Control who can create ExternalSecrets and scope the role's IAM permissions
-accordingly. Existing Sealed Secrets resources retain their current owner.
+The ClusterSecretStore `conditions` allow ExternalSecrets in namespace
+`cloudflare` only. ESO rejects references from other namespaces. This limits
+store use; Kubernetes RBAC must still control who can create ExternalSecrets
+inside `cloudflare`. Scope the IAM role to the intended parameter as well.
+Existing Sealed Secrets consumers retain their current owner.
 
 ## Consumers and readiness
 
