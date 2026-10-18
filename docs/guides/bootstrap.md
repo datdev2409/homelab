@@ -56,6 +56,46 @@ pass `-e cluster_id=002` to explicitly set the destination ID. Always select the
 matching inventory to fetch from the correct cluster. Cluster 002's planned
 Talos provisioning and kubeconfig retrieval remain unimplemented.
 
+## Login username and password
+
+Run `make setup-users CLUSTER=001` to create or update the same Linux login
+account on every host in the selected inventory, including system containers.
+It prompts for a username (default `ubuntu`) and a hidden password with
+confirmation. Existing accounts receive the new password; new accounts receive
+a home directory and Bash shell. Each run sets the password using a fresh
+SHA-512 salt, so reruns report a password change even for the same input.
+Password tasks suppress logs and diffs.
+Separate SSH/Python and privilege checks run first with visible errors, so
+connection failures can be diagnosed without exposing the password.
+
+Hosts need Python 3 and working SSH access through their existing inventory
+users and key, with root or sudo privileges. Install `passlib` in the controller's
+Ansible Python environment for password hashing. SSH password login follows the
+host's existing sshd configuration; sudo access follows its existing account
+and sudoers configuration.
+
+To preview changes or target specific hosts, run from `ansible/`:
+
+```sh
+ansible-playbook -i inventory/001/inventory.yml playbooks/setup-users.yml --check
+ansible-playbook -i inventory/001/inventory.yml playbooks/setup-users.yml --limit cloudflared
+```
+
+Add `--ask-become-pass` if the existing SSH account requires a sudo password.
+Enter the new login password at the prompt; keep it out of command arguments,
+inventory, and committed variable files. The inventory's connection username
+continues to select the existing provisioning account.
+
+For SSH troubleshooting, run from `ansible/`:
+
+```sh
+ansible all -i inventory/001/inventory.yml -m ansible.builtin.ping
+```
+
+Run from this directory so Ansible loads `ansible.cfg`, including the shared
+private-key path. The new login credentials only take effect after a successful
+playbook run; connection failures require working provisioning credentials first.
+
 ## Standalone cloudflared LXC
 
 After provisioning and starting the Ubuntu LXC, run

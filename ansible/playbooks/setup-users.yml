@@ -1,0 +1,59 @@
+---
+- name: Configure a login account on all inventory hosts
+  hosts: all
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  vars_prompt:
+    - name: login_username
+      prompt: Username to create or update on every host
+      default: ubuntu
+      private: false
+
+    - name: login_password
+      prompt: New password for this account on every host
+      private: true
+      confirm: true
+      unsafe: true
+
+  pre_tasks:
+    - name: Require a valid Linux username
+      ansible.builtin.assert:
+        that:
+          - login_username is defined
+          - login_username is string
+          - login_username is match('^[a-z_][a-z0-9_-]{0,31}$')
+        fail_msg: "Enter a Linux username using lowercase letters, digits, underscores, or hyphens."
+
+    - name: Require a nonempty password
+      ansible.builtin.assert:
+        that:
+          - login_password is defined
+          - login_password is string
+          - login_password | length > 0
+        fail_msg: "Supply a nonempty login password through the hidden prompt."
+      no_log: true
+
+    - name: Verify SSH access and remote Python before changing passwords
+      ansible.builtin.ping:
+      become: false
+
+    - name: Verify privilege escalation before changing passwords
+      ansible.builtin.command: id -u
+      register: login_effective_uid
+      changed_when: false
+      check_mode: false
+      failed_when: login_effective_uid.stdout | trim != '0'
+
+  tasks:
+    - name: Create or update the login account and password
+      ansible.builtin.user:
+        name: "{{ login_username }}"
+        state: present
+        create_home: true
+        shell: /bin/bash
+        password: "{{ login_password | password_hash('sha512') }}"
+        password_lock: false
+        update_password: always
+      no_log: true
+      diff: false
