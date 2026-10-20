@@ -1,5 +1,9 @@
 # GitOps applications
 
+[Alloy](alloy/README.md) forwards cluster 001 metrics to Grafana Cloud through
+the Kubernetes Monitoring chart. Its separate Cloud credential Secret is required
+before the collector can start.
+
 The bootstrap root Application targets `apps/roots/001`. Its Kustomization
 lists only child Application definitions. Each child targets its own manifests,
 overlay, or Helm chart; do not recursively scan all of `apps/`.

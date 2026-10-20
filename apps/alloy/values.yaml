@@ -1,0 +1,76 @@
+# Grafana Kubernetes Monitoring chart; Alloy collects and forwards metrics.
+global:
+  scrapeInterval: 60s
+
+destinations:
+  grafana-cloud-metrics:
+    type: prometheus
+    urlFrom: sys.env("GRAFANA_CLOUD_PROMETHEUS_URL")
+    auth:
+      type: basic
+      usernameFrom: sys.env("GRAFANA_CLOUD_PROMETHEUS_USERNAME")
+      passwordFrom: sys.env("GRAFANA_CLOUD_ACCESS_TOKEN")
+    secret:
+      create: false
+      # Credentials come from the Pod environment, not chart-generated Secrets.
+      embed: true
+
+clusterMetrics:
+  enabled: true
+  collector: metrics
+  # k3s uses SQLite here; do not assume separate control-plane endpoints.
+  controlPlane:
+    enabled: false
+
+hostMetrics:
+  enabled: true
+  collector: metrics
+  linuxHosts:
+    enabled: true
+
+collectors:
+  metrics:
+    presets: [singleton, small]
+    alloy:
+      envFrom:
+      - secretRef:
+          name: grafana-cloud
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 512Mi
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    resources:
+      requests:
+        cpu: 20m
+        memory: 64Mi
+      limits:
+        memory: 192Mi
+  node-exporter:
+    deploy: true
+    resources:
+      requests:
+        cpu: 20m
+        memory: 32Mi
+      limits:
+        memory: 128Mi
+
+alloy-operator:
+  ownNamespaceOnly: true
+  # Helm uninstall hooks do not run during Argo CD resource pruning.
+  waitForAlloyRemoval:
+    enabled: false
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      memory: 192Mi
+
+selfReporting:
+  enabled: false
