@@ -26,6 +26,11 @@ inputs = {
           service      = "https://traefik.traefik.svc.cluster.local"
           add_zone_dns = true
         },
+        {
+          hostname     = "test.${local.zone_name}"
+          service      = "https://traefik.traefik.svc.cluster.local"
+          add_zone_dns = true
+        },
         { service = "http_status:404" }
       ]
     }

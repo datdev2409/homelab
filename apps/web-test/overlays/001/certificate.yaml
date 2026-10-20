@@ -5,7 +5,7 @@ metadata:
 spec:
   secretName: web-test-tls
   dnsNames:
-  - test.datnguyen.me
+  - homelab.datnguyen.me
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer

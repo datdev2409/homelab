@@ -10,10 +10,10 @@ spec:
   ingressClassName: traefik
   tls:
   - hosts:
-    - test.datnguyen.me
+    - homelab.datnguyen.me
     secretName: web-test-tls
   rules:
-  - host: test.datnguyen.me
+  - host: homelab.datnguyen.me
     http:
       paths:
       - path: /
@@ -35,7 +35,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: test.datnguyen.me
+  - host: homelab.datnguyen.me
     http:
       paths:
       - path: /
