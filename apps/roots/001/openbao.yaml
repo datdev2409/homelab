@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openbao
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+  - repoURL: https://openbao.github.io/openbao-helm
+    chart: openbao
+    targetRevision: "0.30.1"
+    helm:
+      releaseName: openbao
+      valueFiles:
+      - $values/apps/openbao/values.yaml
+  - repoURL: https://github.com/datdev2409/homelab.git
+    targetRevision: main
+    ref: values
+  # - repoURL: https://github.com/datdev2409/homelab.git
+  #   targetRevision: main
+  #   path: apps/metallb/override/001/extra
+  #   directory:
+  #     recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openbao
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
