@@ -2,3 +2,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: monitoring
+spec:
+  destinations:
+  - namespace: 'https://kubernetes.default.svc'
