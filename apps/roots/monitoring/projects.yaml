@@ -4,4 +4,5 @@ metadata:
   name: monitoring
 spec:
   destinations:
-  - namespace: 'https://kubernetes.default.svc'
+  - server: 'https://kubernetes.default.svc'
+    namespace: '*'
