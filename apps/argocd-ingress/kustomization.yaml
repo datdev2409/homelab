@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - certificate.yaml
   - ingress.yaml
+  - authentik-client-secret-sealed.yaml

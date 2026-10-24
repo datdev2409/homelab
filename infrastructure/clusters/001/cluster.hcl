@@ -8,6 +8,31 @@ locals {
     argocd_chart_version = "10.10.2"
     argocd_namespace     = "argocd"
     argocd_release_name  = "argocd"
+    argocd_values = {
+      configs = {
+        cm = {
+          url = "https://argocd.datnguyen.me"
+          "oidc.config" = yamlencode({
+            name            = "Authentik"
+            issuer          = "https://auth.datnguyen.me/application/o/argocd/"
+            clientID        = "QUUz7AVgCIFuq61BREMSLWDJ6fINhcIFnBHMUNQF"
+            clientSecret    = "$argocd-authentik:clientSecret"
+            requestedScopes = ["openid", "profile", "email"]
+            requestedIDTokenClaims = {
+              groups = { essential = true }
+            }
+          })
+        }
+        rbac = {
+          "policy.default" = ""
+          "policy.csv"     = <<-EOT
+            g, ArgoCD Admins, role:admin
+            g, ArgoCD Viewers, role:readonly
+          EOT
+          scopes           = "[groups]"
+        }
+      }
+    }
     applications = [
       {
         application_name = "root-001"
