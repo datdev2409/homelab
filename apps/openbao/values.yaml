@@ -1,6 +1,7 @@
 server:
   ingress:
     enabled: true
-  ingressClassName: "traefik"
-  hosts:
-    - host: bao.datnguyen.me
+    ingressClassName: "traefik"
+    hosts:
+      - host: bao.datnguyen.me
+        paths: []
