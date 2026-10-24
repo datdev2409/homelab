@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: authentik-postgresql
+  namespace: authentik
+spec:
+  encryptedData:
+    password: AgBDfUMJ/leOKANuVb9LHwm0bK8x8A/hllQ2IsszGHaOb19sLc3chmKWcgRC8l7w6gAiuUAYKWflee3hO6fnjYrHj++SLG7CQuUkY6wDKKLR9fJxL3+CqDrz6rUKZOJnGtVN/v2djwhZfyEwdHO2x72M4KsnxQGp3VldtXuL1QHmW++lz4U1VM5VfqkTR8y0PCTSp3J7Sb4QNQLOGUAWt+wwC0Xw6nS1ymz5BV/0zbaK61r/re+hBBUIc6zSigJswEG7rMLcbjt+aoy4Odc+HAgsYA7u5rE6JB6TYAs72Fq2DdNCHZqxGIUe4ns+oFw6wtulHnfYZhWaVzo17uLnogTDrujvVhMUbS23pZkV6h42u+cM2GH94xadYaj3YJJTvFMdaJSXXWu85Bb1EfmQENBjdLr1tZEOdsmFDn2pKPWG6dcaYL4bs5xmGGS8E4T4RpTqS1kYralhOQzUgn5hFzleZtjWCb4cOuZSIxJgkEb9zGcd7xbuW8CHhA+RWp9ocMqLeEDqbXivv6AtmzSr2NO/nwTBujmB1+zLtVaZNfsELTI+VZ6HcvwfNUvD3/F54llaDrCSUdWHnzLJTdNFYvnQ4rc8I6LakLPJlmkbbaH36RLX08X87btquMFBJgUzAa4X8VzcU2y4k8dOiEgvfLWMVPqe/HDigCOvUuAEYNXnczLcDNwuaiLcWeEWfhzDVF6ikK9k4e/DhqovaUqLkRNdlmfOrV7nDeHsd7iZxk++LVYVS74YuelQ/ePuCoc4d2JPryKbez8Uadaeps9l1fGH
+  template:
+    metadata:
+      name: authentik-postgresql
+      namespace: authentik
+    type: Opaque

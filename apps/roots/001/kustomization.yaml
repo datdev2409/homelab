@@ -10,4 +10,5 @@ resources:
   - metallb.yaml
   - ../../argocd-ingress
   - web-test.yaml
+  - authentik.yaml
   - ../monitoring

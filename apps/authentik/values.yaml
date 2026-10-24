@@ -1,0 +1,56 @@
+authentik:
+  existingSecret:
+    secretName: authentik-config
+
+global:
+  securityContext:
+    fsGroup: 1000
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: authentik-data
+  volumeMounts:
+  - name: data
+    mountPath: /data
+
+server:
+  replicas: 1
+  serviceAccountName: default
+  automountServiceAccountToken: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+worker:
+  replicas: 1
+  serviceAccountName: default
+  automountServiceAccountToken: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+# The embedded outpost is sufficient initially; no managed outpost RBAC needed.
+serviceAccount:
+  create: false
+
+postgresql:
+  enabled: true
+  auth:
+    enablePostgresUser: false
+    existingSecret: authentik-postgresql
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi

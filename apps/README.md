@@ -1,5 +1,9 @@
 # GitOps applications
 
+[Authentik](authentik/README.md) provides an identity provider on cluster 001
+at `auth.datnguyen.me`, with PostgreSQL, persistent file storage, and sealed
+credentials. DNS/tunnel routing and application SSO integrations are separate.
+
 [Alloy](alloy/README.md) forwards cluster 001 metrics to Grafana Cloud through
 the Kubernetes Monitoring chart. Its separate Cloud credential Secret is required
 before the collector can start.

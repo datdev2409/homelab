@@ -1,0 +1,19 @@
+server:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      # Traefik does not publish ingress status; check the route directly.
+      argocd.argoproj.io/ignore-healthcheck: "true"
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    hosts:
+    - auth.datnguyen.me
+    tls:
+    - hosts:
+      - auth.datnguyen.me
+      secretName: authentik-tls
+
+postgresql:
+  primary:
+    persistence:
+      storageClass: local-path

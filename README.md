@@ -46,7 +46,8 @@ its local state and variable files are archived under `.local/archives/`.
 `make plan-cluster-bootstrap CLUSTER=001` and `make apply-cluster-bootstrap
 CLUSTER=001` after Ansible and kubeconfig retrieval. The kubectl provider manages
 the root Application; private Git access credentials must be configured separately.
-Child Applications include [Cloudflared](apps/cloudflared/README.md) and
+Child Applications include [Cloudflared](apps/cloudflared/README.md),
+[Authentik](apps/authentik/README.md) for identity and SSO, and
 [cert-manager](apps/cert-manager/README.md), plus
 [Traefik](apps/traefik/README.md) ingress and
 [Sealed Secrets](apps/sealed-secrets/README.md) for encrypted GitOps credentials,
