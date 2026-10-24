@@ -18,6 +18,11 @@ spec:
   - repoURL: https://github.com/datdev2409/homelab.git
     targetRevision: main
     ref: values
+  - repoURL: https://github.com/datdev2409/homelab.git
+    targetRevision: main
+    path: apps/grafana/extra
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: grafana

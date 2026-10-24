@@ -3,7 +3,12 @@ grafana.ini:
     domain: grafana.datnguyen.me
     root_url: "%(protocol)s://%(domain)s/"
 ingress:
+  ingressClassName: traefik
   enabled: true
   hosts:
     - "grafana.datnguyen.me"
   path: "/"
+  tls:
+  - hosts:
+    - grafana.datnguyen.me
+    secretName: grafana-ingress-tls
