@@ -12,3 +12,5 @@ ingress:
   - hosts:
     - grafana.datnguyen.me
     secretName: grafana-ingress-tls
+  annotations:
+    argocd.argoproj.io/ignore-healthcheck: "true"

@@ -7,3 +7,5 @@ server:
     - secretName: prometheus-server-tls
       hosts:
         - prometheus.datnguyen.me
+    annotations:
+      argocd.argoproj.io/ignore-healthcheck: "true"
