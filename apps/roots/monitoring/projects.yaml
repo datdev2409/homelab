@@ -3,6 +3,11 @@ kind: AppProject
 metadata:
   name: monitoring
 spec:
+  sourceRepos:
+  - '*'
   destinations:
   - server: 'https://kubernetes.default.svc'
     namespace: '*'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
