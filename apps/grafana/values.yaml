@@ -1,0 +1,9 @@
+grafana.ini:
+  server:
+    domain: grafana.datnguyen.me
+    root_url: "%(protocol)s://%(domain)s/"
+ingress:
+  enabled: true
+  hosts:
+    - "grafana.datnguyen.me"
+  path: "/"
