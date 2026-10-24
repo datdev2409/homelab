@@ -1,0 +1,9 @@
+server:
+  ingress:
+    enabled: true
+    hosts:
+    - prometheus.datnguyen.me
+    tls:
+    - secretName: prometheus-server-tls
+      hosts:
+        - prometheus.datnguyen.me
