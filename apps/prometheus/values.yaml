@@ -1,6 +1,7 @@
 server:
   ingress:
     enabled: true
+    ingressClassName: traefik
     hosts:
     - prometheus.datnguyen.me
     tls:
