@@ -10,5 +10,4 @@ resources:
   - metallb.yaml
   - ../../argocd-ingress
   - web-test.yaml
-  - alloy.yaml
-  - openbao.yaml
+  - ../monitoring
